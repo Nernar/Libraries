@@ -71,7 +71,7 @@ Network.prototype.setUrl = function(url) {
  * @returns {boolean} is installed successfully
  */
 Network.prototype.setAddress = function(address) {
-	if (address instanceof String) {
+	if (!(address instanceof Number)) {
 		this.setUrl(new java.net.URL(address));
 		return true;
 	}
@@ -136,7 +136,7 @@ Network.prototype.hasConnection = function() {
 Network.prototype.connect = function() {
 	let connection = this.getConnection();
 	if (connection) connection.connect();
-	else throw "Can't find any opened connection to connect";
+	else throw new Error("Can't find any opened connection to connect");
 	if (this.callback.hasOwnProperty("onConnect")) {
 		this.callback.onConnect.call(this, connection);
 	}
@@ -199,11 +199,10 @@ Network.isOnline = function(context) {
  * @param {string} [address] address
  */
 Network.Reader = function(address) {
-	this.callback = new Object();
 	address && this.setAddress(address);
 };
 
-Network.Reader.prototype = new Network();
+Network.Reader.prototype = new Network;
 Network.Reader.prototype.charset = "UTF-8";
 
 /**
@@ -285,7 +284,7 @@ Network.Reader.prototype.getResult = function() {
  */
 Network.Reader.prototype.read = function() {
 	let stream = this.getStreamReader();
-	if (!stream) throw "Can't read stream, because one of params is missing";
+	if (!stream) throw new Error("Can't read stream, because one of params is missing");
 	let result = this.result = new Array(),
 		reader = new java.io.BufferedReader(stream);
 	this.processing = true;
@@ -317,11 +316,10 @@ Network.Reader.prototype.read = function() {
  * @param {string} [address] address
  */
 Network.Writer = function(address) {
-	this.callback = new Object();
 	address && this.setAddress(address);
 };
 
-Network.Writer.prototype = new Network();
+Network.Writer.prototype = new Network;
 Network.Writer.prototype.size = 8192;
 
 /**
@@ -368,7 +366,7 @@ Network.Writer.prototype.getStreamReader = function() {
  * @throws error if not overwritten by prototype
  */
 Network.Writer.prototype.getOutputStream = function() {
-	throw "You must install a method getOutputStream()";
+	throw new Error("You must install a method getOutputStream()");
 };
 
 /**
@@ -386,8 +384,8 @@ Network.Writer.prototype.inProcess = function() {
  */
 Network.Writer.prototype.download = function() {
 	let stream = this.getStreamReader(), output = this.getOutputStream();
-	if (!stream) throw "Can't download stream, because input stream is missing";
-	if (!output) throw "Can't download stream, because output stream is missing";
+	if (!stream) throw new Error("Can't download stream, because input stream is missing");
+	if (!output) throw new Error("Can't download stream, because output stream is missing");
 	this.connect(), this.count = 0;
 	this.processing = true;
 	let size = this.getLength();
@@ -423,12 +421,11 @@ Network.Writer.prototype.download = function() {
  * @param {string} [path] file path
  */
 Network.Downloader = function(address, path) {
-	this.callback = new Object();
 	address && this.setAddress(address);
 	path && this.setPath(path);
 };
 
-Network.Downloader.prototype = new Network.Writer();
+Network.Downloader.prototype = new Network.Writer;
 
 /**
  * Returns currently specified file.
@@ -492,7 +489,7 @@ Network.Downloader.prototype.getOutputStream = function() {
  */
 Network.handle = function(action, callback, connect) {
 	if (!(action instanceof Function)) {
-		throw "Nothing to handle";
+		throw new Error("Nothing to handle");
 	}
 	new java.lang.Thread(function() {
 		try {
