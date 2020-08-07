@@ -1,11 +1,11 @@
 /*
-	 _   _	  _					  _	_	  _ _	 
-	| \ | |	| |					| |  | |	(_) |	
-	|  \| | ___| |___	  _____  _ __| | _| |	 _| |__  
-	| . ` |/ _ \ __\ \ /\ / / _ \| '__| |/ / |	| | '_ \ 
+	 _   _      _                      _    _      _ _     
+	| \ | |    | |                    | |  | |    (_) |    
+	|  \| | ___| |___      _____  _ __| | _| |     _| |__  
+	| . ` |/ _ \ __\ \ /\ / / _ \| '__| |/ / |    | | '_ \ 
 	| |\  |  __/ |_ \ V  V / (_) | |  |   <| |____| | |_) |
 	|_| \_|\___|\__| \_/\_/ \___/|_|  |_|\_\______|_|_.__/ 
-   														   
+														   
 														   
    Copyright 2020 Nernar (github.com/nernar)
    
@@ -13,7 +13,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
    
-	   http://www.apache.org/licenses/LICENSE-2.0
+       http://www.apache.org/licenses/LICENSE-2.0
    
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
