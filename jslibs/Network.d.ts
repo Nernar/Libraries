@@ -517,7 +517,7 @@ declare namespace Network {
 		 * Called if an error occurs during process.
 		 * Unexpected disconnection is a common mistake.
 		 */
-		onFail(connect: any): void;
+		onFail(connect?: any): void;
 		
 		/**
 		 * Called if user hasn't internet connection.
