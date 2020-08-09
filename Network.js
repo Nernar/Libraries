@@ -288,9 +288,8 @@ Network.Reader.prototype.read = function() {
 	let result = this.result = new Array(),
 		reader = new java.io.BufferedReader(stream);
 	this.processing = true;
-	let size = this.getLength();
 	if (this.callback.hasOwnProperty("onPrepare")) {
-		this.callback.onPrepare.call(this, size);
+		this.callback.onPrepare.call(this);
 	}
 	while (this.inProcess()) {
 		let line = reader.readLine();
@@ -301,7 +300,7 @@ Network.Reader.prototype.read = function() {
 		}
 	}
 	if (this.callback.hasOwnProperty("onComplete")) {
-		this.callback.onComplete.call(this, size);
+		this.callback.onComplete.call(this);
 	}
 	delete this.processing;
 	reader.close();

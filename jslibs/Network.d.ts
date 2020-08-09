@@ -273,7 +273,7 @@ declare namespace Network {
 			/**
 			 * Called before starting reading process.
 			 */
-			onPrepare(reader: Network.Reader, length: number): void;
+			onPrepare(reader: Network.Reader): void;
 			
 			/**
 			 * Called when a line is read from a stream.
@@ -284,7 +284,7 @@ declare namespace Network {
 			/**
 			 * Called when a read is complete.
 			 */
-			onComplete(reader: Network.Reader, length: number): void;
+			onComplete(reader: Network.Reader): void;
 		}
 	}
 	
