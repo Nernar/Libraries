@@ -15,7 +15,7 @@ BitmapDrawableFactory.requireByKey = function(key, options) {
 		this.required[key] = BitmapFactory.decodeFile(file, options);
 		return this.requireByKey(key);
 	}
-	log("Drawable: bitmap " + key + " not found or mapped incorrecly");
+	log("Drawable: Bitmap " + key + " not found or mapped incorrecly");
 	return null;
 };
 

@@ -1,7 +1,7 @@
 /*
 BUILD INFO:
   dir: JsonIo
-  target: out/JsonIo.js
+  target: JsonIo.js
   files: 4
 */
 

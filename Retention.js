@@ -1,7 +1,7 @@
 /*
 BUILD INFO:
   dir: Retention
-  target: out/Retention.js
+  target: Retention.js
   files: 2
 */
 

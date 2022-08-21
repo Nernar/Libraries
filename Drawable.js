@@ -1,7 +1,7 @@
 /*
 BUILD INFO:
   dir: Drawable
-  target: out/Drawable.js
+  target: Drawable.js
   files: 15
 */
 
@@ -318,7 +318,7 @@ BitmapDrawableFactory.requireByKey = function(key, options) {
 		this.required[key] = BitmapFactory.decodeFile(file, options);
 		return this.requireByKey(key);
 	}
-	log("Drawable: bitmap " + key + " not found or mapped incorrecly");
+	log("Drawable: Bitmap " + key + " not found or mapped incorrecly");
 	return null;
 };
 
@@ -672,7 +672,7 @@ CachedDrawable.prototype.toDrawable = function() {
 				this.source = drawable;
 			}
 		} catch (e) {
-			Logger.Log("Drawable: exception in CachedDrawable.process: " + e, "WARNING");
+			Logger.Log("Drawable: CachedDrawable.toDrawable: " + e, "WARNING");
 		}
 	}
 	return this.source || null;
@@ -994,11 +994,11 @@ ClipDrawable.Side.VERTICAL = 2;
 // file: drawable/BitmapDrawable.js
 
 BitmapDrawable = function(bitmap, options) {
-	if (bitmap !== undefined) {
-		this.setBitmap(bitmap);
-	}
 	if (options !== undefined) {
 		this.setOptions(options);
+	}
+	if (bitmap !== undefined) {
+		this.setBitmap(bitmap);
 	}
 	ScheduledDrawable.call(this);
 };
@@ -1009,7 +1009,6 @@ BitmapDrawable.prototype.process = function() {
 	let bitmap = this.getBitmap(),
 		options = this.getOptions();
 	if (bitmap != null) {
-		let who = bitmap;
 		bitmap = BitmapDrawableFactory.wrap(bitmap, options);
 		if (!(bitmap instanceof android.graphics.Bitmap)) {
 			bitmap = this.getCorruptedThumbnail();
@@ -1020,7 +1019,7 @@ BitmapDrawable.prototype.process = function() {
 		this.wrapped = bitmap;
 	}
 	if (bitmap == null) {
-		return null;
+		return (this.wrapped = null);
 	}
 	return new android.graphics.drawable.BitmapDrawable(bitmap);
 };

@@ -1,7 +1,7 @@
 /*
 BUILD INFO:
   dir: Files
-  target: out/Files.js
+  target: Files.js
   files: 38
 */
 
@@ -621,7 +621,6 @@ Files.packZip = function(shrink, who, output) {
 // file: integration.js
 
 EXPORT("Files", Files);
-EXPORT("toMD5", toMD5);
 
 
 

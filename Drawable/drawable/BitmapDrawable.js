@@ -1,9 +1,9 @@
 BitmapDrawable = function(bitmap, options) {
-	if (bitmap !== undefined) {
-		this.setBitmap(bitmap);
-	}
 	if (options !== undefined) {
 		this.setOptions(options);
+	}
+	if (bitmap !== undefined) {
+		this.setBitmap(bitmap);
 	}
 	ScheduledDrawable.call(this);
 };
@@ -14,7 +14,6 @@ BitmapDrawable.prototype.process = function() {
 	let bitmap = this.getBitmap(),
 		options = this.getOptions();
 	if (bitmap != null) {
-		let who = bitmap;
 		bitmap = BitmapDrawableFactory.wrap(bitmap, options);
 		if (!(bitmap instanceof android.graphics.Bitmap)) {
 			bitmap = this.getCorruptedThumbnail();
@@ -25,7 +24,7 @@ BitmapDrawable.prototype.process = function() {
 		this.wrapped = bitmap;
 	}
 	if (bitmap == null) {
-		return null;
+		return (this.wrapped = null);
 	}
 	return new android.graphics.drawable.BitmapDrawable(bitmap);
 };

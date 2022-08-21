@@ -18,7 +18,7 @@ CachedDrawable.prototype.toDrawable = function() {
 				this.source = drawable;
 			}
 		} catch (e) {
-			Logger.Log("Drawable: exception in CachedDrawable.process: " + e, "WARNING");
+			Logger.Log("Drawable: CachedDrawable.toDrawable: " + e, "WARNING");
 		}
 	}
 	return this.source || null;

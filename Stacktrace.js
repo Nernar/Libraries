@@ -1,7 +1,7 @@
 /*
 BUILD INFO:
   dir: Stacktrace
-  target: out/Stacktrace.js
+  target: Stacktrace.js
   files: 8
 */
 

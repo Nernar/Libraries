@@ -1,7 +1,7 @@
 /*
 BUILD INFO:
   dir: Environment
-  target: out/Environment.js
+  target: Environment.js
   files: 14
 */
 
