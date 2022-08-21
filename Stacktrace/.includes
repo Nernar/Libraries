@@ -1,0 +1,11 @@
+header.js
+translation.js
+
+data/sources.js
+data/parser.js
+
+stacktrace/addTranslation.js
+stacktrace/localizeError.js
+stacktrace/reportTrace.js
+
+integration.js
