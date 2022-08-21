@@ -1,0 +1,13 @@
+EXPORT("HashedDrawableMap", HashedDrawableMap); 
+EXPORT("DrawableFactory", DrawableFactory);
+EXPORT("BitmapFactory", BitmapFactory);
+EXPORT("BitmapDrawableFactory", BitmapDrawableFactory); 
+EXPORT("AnimationDrawableFactory", AnimationDrawableFactory);
+EXPORT("Drawable", Drawable);
+EXPORT("CachedDrawable", CachedDrawable);
+EXPORT("ColorDrawable", ColorDrawable);
+EXPORT("ScheduledDrawable", ScheduledDrawable);
+EXPORT("LayerDrawable", LayerDrawable);
+EXPORT("ClipDrawable", ClipDrawable);
+EXPORT("BitmapDrawable", BitmapDrawable);
+EXPORT("AnimationDrawable", AnimationDrawable);
