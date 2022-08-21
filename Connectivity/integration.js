@@ -9,7 +9,7 @@ Connectivity.handle = function(action, callback, connect) {
 	if (!(action instanceof Function)) {
 		MCSystem.throwException("Connectivity: Nothing to network handle");
 	}
-	handleThread(function() {
+	new java.lang.Thread(function() {
 		try {
 			action();
 		} catch (e) {
@@ -27,7 +27,7 @@ Connectivity.handle = function(action, callback, connect) {
 				Logger.Log("Connectivity: A fatal error occurred while trying to network connect", "ERROR");
 			}
 		}
-	});
+	}).start();
 };
 
 /**

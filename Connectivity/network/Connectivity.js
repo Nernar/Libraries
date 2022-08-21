@@ -22,7 +22,7 @@ Connectivity.prototype.getUrl = function() {
  * @param {Object|null} url java url
  */
 Connectivity.prototype.setUrl = function(url) {
-	if ("" + url == url) {
+	if ("" + url === url) {
 		Logger.Log("Connectivity: You should use Connectivity.setAddress instead of Connectivity.setUrl for string values", "WARNING");
 		this.setAddress(url);
 		return;
