@@ -1,0 +1,70 @@
+{
+	"info": {
+		"name": "Libraries",
+		"author": "Nernar"
+	},
+	"api": "Preloader",
+	"target": {
+		"library": ".."
+	},
+	"sources": [
+		{
+			"type": "library",
+			"language": "javascript",
+			"source": "Action"
+		},
+		{
+			"type": "library",
+			"language": "javascript",
+			"source": "Connectivity"
+		},
+		{
+			"type": "library",
+			"language": "javascript",
+			"source": "Drawable"
+		},
+		{
+			"type": "library",
+			"language": "javascript",
+			"source": "Environment"
+		},
+		{
+			"type": "library",
+			"language": "javascript",
+			"source": "Files"
+		},
+		{
+			"type": "library",
+			"language": "javascript",
+			"source": "JsonIo"
+		},
+		{
+			"type": "library",
+			"language": "javascript",
+			"source": "ModBrowser.Query"
+		},
+		{
+			"type": "library",
+			"language": "javascript",
+			"source": "Retention"
+		},
+		{
+			"type": "library",
+			"language": "javascript",
+			"source": "Sequence"
+		},
+		{
+			"type": "library",
+			"language": "javascript",
+			"source": "Stacktrace"
+		},
+		{
+			"type": "library",
+			"language": "javascript",
+			"source": "Transition"
+		}
+	],
+	"resources": [],
+	"compile": [],
+	"additional": []
+}

@@ -68,11 +68,11 @@ reportTrace = function(error) {
 reportTrace.handled = [];
 
 reportTrace.postUpdate = function(dialog, error, date) {
-	let handler = android.os.Handler.createAsync(dialog.getContext().getMainLooper(), new android.os.Handler.Callback() {
+	let handler = android.os.Handler.createAsync(dialog.getContext().getMainLooper(), new android.os.Handler.Callback({
 			handleMessage: function(message) {
 				return false;
 			}
-		}),
+		})),
 		completed = false,
 		formatted,
 		update;
