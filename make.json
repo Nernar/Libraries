@@ -7,6 +7,7 @@
 	"target": {
 		"library": ".."
 	},
+	"debugIncludesExclude": [],
 	"sources": [
 		{
 			"type": "library",
@@ -45,7 +46,7 @@
 		},
 		{
 			"type": "library",
-			"language": "javascript",
+			"language": "typescript",
 			"source": "Retention"
 		},
 		{

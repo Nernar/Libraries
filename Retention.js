@@ -21,91 +21,176 @@ LIBRARY({
     api: "AdaptedScript",
     shared: true
 });
-launchTime = Date.now();
+var _this = this;
+/**
+ * Milliseconds from moment when library started.
+ */
+var launchTime = Date.now();
 EXPORT("launchTime", launchTime);
-isHorizon = (function () {
+/**
+ * Determines engine: Inner Core v1 or Horizon v2.
+ */
+var isHorizon = (function () {
+    // @ts-ignore
     var version = MCSystem.getInnerCoreVersion();
     return parseInt(version.toString()[0]) >= 2;
 })();
 EXPORT("isHorizon", isHorizon);
-EXPORT("minecraftVersion", (function () {
+/**
+ * Minecraft version running by Inner Core.
+ * It must be `0`, `11` or `16`.
+ */
+var minecraftVersion = (function () {
+    // @ts-ignore
     var version = MCSystem.getMinecraftVersion();
     return parseInt(version.toString().split(".")[1]);
-})());
-getContext = function () {
-    return UI.getContext();
-};
-EXPORT("getContext", getContext);
+})();
+EXPORT("minecraftVersion", minecraftVersion);
 /**
- * Error display window, possibly in particular,
- * useful for visualizing and debugging problems.
- * @param {Object} error fallback exception
+ * Currently running activity, it context must be
+ * required to perform interactions with Android.
  */
-reportError = (function (what) {
-    EXPORT("registerReportAction", function (when) {
-        what = when;
-    });
-    return function (error) {
-        if (what) {
-            what(error);
-        }
-    };
-})(function (error) {
+var getContext = function () { return UI.getContext(); };
+EXPORT("getContext", getContext);
+this.threadStack = [];
+this.display = getContext().getWindowManager().getDefaultDisplay();
+this.metrics = getContext().getResources().getDisplayMetrics();
+this.reportAction = function (error) {
     try {
         if (isHorizon) {
+            // @ts-ignore
             Packages.com.zhekasmirnov.innercore.api.log.ICLog.i("WARNING", Packages.com.zhekasmirnov.innercore.api.log.ICLog.getStackTrace(error));
         }
         else {
+            // @ts-ignore
             Packages.zhekasmirnov.launcher.api.log.ICLog.i("WARNING", Packages.zhekasmirnov.launcher.api.log.ICLog.getStackTrace(error));
         }
     }
-    catch (shit) {
+    catch (_a) {
         try {
             Logger.Log(typeof error == "object" ? error.name + ": " + error.message + "\n" + error.stack : "" + error, "WARNING");
         }
-        catch (sad) {
+        catch (_b) {
             Logger.Log("" + error, "WARNING");
         }
     }
-});
+};
+/**
+ * Display error in window, possibly in particular,
+ * useful for visualizing and debugging problems.
+ */
+var reportError = function (error) {
+    if (_this.reportAction) {
+        _this.reportAction(error);
+    }
+};
 EXPORT("reportError", reportError);
+/**
+ * Registers exception report action, it will be used as
+ * default when {@link handle}, {@link handleThread}, etc. fails.
+ * @param when action to perform with error
+ */
+var registerReportAction = function (when) {
+    _this.reportAction = when;
+};
+EXPORT("registerReportAction", registerReportAction);
 /**
  * Displays a log window for user whether it is
  * needed or not. On latest versions, number of such
  * windows on screen is limited for performance reasons.
- * @param {string} message additional information
- * @param {string} title e.g. mod name
- * @param {function} [fallback] when too much dialogs
+ * @param message additional information
+ * @param title e.g. mod name
+ * @param fallback when too much dialogs
  */
-EXPORT("showReportDialog", function (message, title, fallback) {
+var showReportDialog = function (message, title, fallback) {
     if (isHorizon) {
         try {
+            // @ts-ignore
             Packages.com.zhekasmirnov.innercore.api.log.DialogHelper.openFormattedDialog("" + message, "" + title, fallback || null);
         }
         catch (e) {
+            // @ts-ignore
             Packages.com.zhekasmirnov.innercore.api.log.DialogHelper.openFormattedDialog("" + message, "" + title);
         }
     }
     else {
+        // @ts-ignore
         Packages.zhekasmirnov.launcher.api.log.DialogHelper.openFormattedDialog("" + message, "" + title);
     }
-});
+};
+EXPORT("showReportDialog", showReportDialog);
 /**
- * invoke(what, when => (th)): any
- * invokeRuntime(what, when => (th)): any
- * invokeRhino(what, when => (th)): any
+ * Directly redirects native rhino JavaScript {@link Error} to
+ * {@link java.lang.Throwable} instances.
  */
-EXPORT("resolveThrowable", (function () {
-    var decodeBase64 = function (base64) {
+var resolveThrowable = (function () {
+    var bytes = (function (base64) {
         if (android.os.Build.VERSION.SDK_INT >= 26) {
-            return java.util.Base64.getDecoder().decode(java.lang.String(base64).getBytes());
+            return java.util.Base64.getDecoder().decode(new java.lang.String(base64).getBytes());
         }
-        return android.util.Base64.decode(java.lang.String(base64).getBytes(), android.util.Base64.NO_WRAP);
-    };
-    var bytes = decodeBase64("ZGV4CjAzNQA7yC65zIj/irByxZUNv+ejN5SKUkKw3cq4CgAAcAAAAHhWNBIAAAAAAAAAAAwKAAAoAAAAcAAAABQAAAAQAQAADAAAAGABAAABAAAA8AEAABMAAAD4AQAAAQAAAJACAAAICAAAsAIAALACAAC6AgAAwgIAAMUCAADJAgAAzgIAANQCAADbAgAAAAMAABMDAAA3AwAAWwMAAH0DAACgAwAAtAMAANIDAADmAwAA/QMAACgEAABXBAAAcwQAAJUEAAC4BAAA4QQAAAYFAAAeBQAAIQUAACUFAAA5BQAATgUAAG0FAABzBQAApwUAALAFAAC8BQAAxwUAANcFAADfBQAA7AUAAPsFAAAHAAAACAAAAAkAAAAKAAAACwAAAAwAAAANAAAADgAAAA8AAAAQAAAAEQAAABIAAAATAAAAFAAAABUAAAAWAAAAFwAAABkAAAAbAAAAHAAAAAMAAAABAAAAOAYAAAQAAAAGAAAAZAYAAAYAAAAGAAAAWAYAAAQAAAAGAAAASAYAAAUAAAAGAAAALAYAAAIAAAAIAAAAAAAAAAQAAAAMAAAAQAYAAAIAAAANAAAAAAAAAAIAAAAQAAAAAAAAABkAAAARAAAAAAAAABoAAAARAAAAOAYAABoAAAARAAAAUAYAAAAADAAdAAAAAAAJAAAAAAAAAAkAAQAAAAAABwAdAAAAAAADACQAAAAAAAQAJAAAAAAAAwAlAAAAAAAEACUAAAAAAAMAJgAAAAAABAAmAAAAAQAAACAAAAABAAYAIgAAAAQACgABAAAABgAJAAEAAAAJAAUAIQAAAAoACwABAAAADAABACQAAAAOAAIAHgAAAA4ACAAjAAAAEAAIACMAAAAAAAAAAQAAAAYAAAAAAAAAGAAAAAAAAADcCQAAAAAAAAg8Y2xpbml0PgAGPGluaXQ+AAFMAAJMTAADTExMAARMTExMAAVMTExMTAAjTGlvL25lcm5hci9yaGluby9UaHJvd2FibGVSZXNvbHZlcjsAEUxqYXZhL2xhbmcvQ2xhc3M7ACJMamF2YS9sYW5nL0NsYXNzTm90Rm91bmRFeGNlcHRpb247ACJMamF2YS9sYW5nL0lsbGVnYWxBY2Nlc3NFeGNlcHRpb247ACBMamF2YS9sYW5nL05vQ2xhc3NEZWZGb3VuZEVycm9yOwAhTGphdmEvbGFuZy9Ob1N1Y2hNZXRob2RFeGNlcHRpb247ABJMamF2YS9sYW5nL09iamVjdDsAHExqYXZhL2xhbmcvUnVudGltZUV4Y2VwdGlvbjsAEkxqYXZhL2xhbmcvU3RyaW5nOwAVTGphdmEvbGFuZy9UaHJvd2FibGU7AClMamF2YS9sYW5nL1Vuc3VwcG9ydGVkT3BlcmF0aW9uRXhjZXB0aW9uOwAtTGphdmEvbGFuZy9yZWZsZWN0L0ludm9jYXRpb25UYXJnZXRFeGNlcHRpb247ABpMamF2YS9sYW5nL3JlZmxlY3QvTWV0aG9kOwAgTG9yZy9tb3ppbGxhL2phdmFzY3JpcHQvQ29udGV4dDsAIUxvcmcvbW96aWxsYS9qYXZhc2NyaXB0L0Z1bmN0aW9uOwAnTG9yZy9tb3ppbGxhL2phdmFzY3JpcHQvUmhpbm9FeGNlcHRpb247ACNMb3JnL21vemlsbGEvamF2YXNjcmlwdC9TY3JpcHRhYmxlOwAWVGhyb3dhYmxlUmVzb2x2ZXIuamF2YQABVgACVkwAEltMamF2YS9sYW5nL0NsYXNzOwATW0xqYXZhL2xhbmcvT2JqZWN0OwAdYXNzdXJlQ29udGV4dEZvckN1cnJlbnRUaHJlYWQABGNhbGwAMmNvbS56aGVrYXNtaXJub3YuaW5uZXJjb3JlLm1vZC5leGVjdXRhYmxlLkNvbXBpbGVyAAdmb3JOYW1lAApnZXRNZXNzYWdlAAlnZXRNZXRob2QADmdldFBhcmVudFNjb3BlAAZpbnZva2UAC2ludm9rZVJoaW5vAA1pbnZva2VSdW50aW1lAC16aGVrYXNtaXJub3YubGF1bmNoZXIubW9kLmV4ZWN1dGFibGUuQ29tcGlsZXIAAAADAAAAEAAOAA4AAAABAAAACAAAAAIAAAAIABIAAgAAAA4ADgABAAAACQAAAAQAAAANABAAEAATAAIAAAAGABMAAAAAABAABw4BERcCdx3FadN6AntoAEcABw4AHwAHDgEQEGYALgIAAAcOACcDAAAABywBERAbagBGAgAABw4APwMAAAAHLAEREBtqADoCAAAHDgAzAwAAAAcsAREQG2oAAwAAAAMAAwBwBgAAQAAAABoAHwBxEAkAAAAMABoBHQASAiMiEgBuMAoAEAIMAGkAAAAOAA0AIgEEAG4QDQAAAAwAcCALAAEAJwENABoAJwBxEAkAAAAMABoBHQASAiMiEgBuMAoAEAIMAGkAAAAo4g0AIgEKAHAgDgABACcBDQAiAQoAcCAOAAEAJwENACjyAAAAAAUAAQAGAAAAFwAIAB4AAAARAA0AAwMCEgQdBTcCBB0FNwICMAU+AAABAAEAAQAAAIIGAAAEAAAAcBAMAAAADgADAAAAAwABAIcGAAAYAAAAYgEAABIAHwAGABICIyITAG4wDwABAgwAHwANABEADQAiAQoAcCAOAAEAJwENACj5AAAAAA4AAQABAgsWAw8AAAMAAgADAAAAkAYAAAkAAAByEBEAAQAMAHEwBAAQAgwAEQAAAAgAAwAFAAEAlwYAADIAAAASARIEcQACAAAADAI4BQ4AchASAAUADAASAyMzEwByUxAAJlAMABEAEgAfABAAKPUNAAcCcQACAAAADAM4BRAAchASAAUADAASESMREwBNAgEEclEQADdQDAAo5gcQHwAQACjzAgAAABUAAQABAQkYAwACAAMAAACkBgAACQAAAHIQEQABAAwAcTAEABACDAARAAAACAADAAUAAQCrBgAAMgAAABIBEgRxAAIAAAAMAjgFDgByEBIABQAMABIDIzMTAHJTEAAmUAwAEQASAB8AEAAo9Q0ABwJxAAIAAAAMAzgFEAByEBIABQAMABIRIxETAE0CAQRyURAAN1AMACjmBxAfABAAKPMCAAAAFQABAAEBDxgDAAIAAwAAALgGAAAJAAAAchARAAEADABxMAQAEAIMABEAAAAIAAMABQABAL8GAAAyAAAAEgESBHEAAgAAAAwCOAUOAHIQEgAFAAwAEgMjMxMAclMQACZQDAARABIAHwAQACj1DQAHAnEAAgAAAAwDOAUQAHIQEgAFAAwAEhEjERMATQIBBHJREAA3UAwAKOYHEB8AEAAo8wIAAAAVAAEAAQEHGAEACQAAGgCYgATMDQGBgASIDwEKoA8BCfAPAQmUEAEJlBEBCbgRAQm4EgEJ3BIAAA4AAAAAAAAAAQAAAAAAAAABAAAAKAAAAHAAAAACAAAAFAAAABABAAADAAAADAAAAGABAAAEAAAAAQAAAPABAAAFAAAAEwAAAPgBAAAGAAAAAQAAAJACAAACIAAAKAAAALACAAABEAAABwAAACwGAAADEAAAAQAAAGwGAAADIAAACQAAAHAGAAABIAAACQAAAMwGAAAAIAAAAQAAANwJAAAAEAAAAQAAAAwKAAA=");
+        return android.util.Base64.decode(new java.lang.String(base64).getBytes(), android.util.Base64.NO_WRAP);
+    })("ZGV4CjAzNQA7yC65zIj/irByxZUNv+ejN5SKUkKw3cq4CgAAcAAAAHhWNBIAAAAA" +
+        "AAAAAAwKAAAoAAAAcAAAABQAAAAQAQAADAAAAGABAAABAAAA8AEAABMAAAD4AQAA" +
+        "AQAAAJACAAAICAAAsAIAALACAAC6AgAAwgIAAMUCAADJAgAAzgIAANQCAADbAgAA" +
+        "AAMAABMDAAA3AwAAWwMAAH0DAACgAwAAtAMAANIDAADmAwAA/QMAACgEAABXBAAA" +
+        "cwQAAJUEAAC4BAAA4QQAAAYFAAAeBQAAIQUAACUFAAA5BQAATgUAAG0FAABzBQAA" +
+        "pwUAALAFAAC8BQAAxwUAANcFAADfBQAA7AUAAPsFAAAHAAAACAAAAAkAAAAKAAAA" +
+        "CwAAAAwAAAANAAAADgAAAA8AAAAQAAAAEQAAABIAAAATAAAAFAAAABUAAAAWAAAA" +
+        "FwAAABkAAAAbAAAAHAAAAAMAAAABAAAAOAYAAAQAAAAGAAAAZAYAAAYAAAAGAAAA" +
+        "WAYAAAQAAAAGAAAASAYAAAUAAAAGAAAALAYAAAIAAAAIAAAAAAAAAAQAAAAMAAAA" +
+        "QAYAAAIAAAANAAAAAAAAAAIAAAAQAAAAAAAAABkAAAARAAAAAAAAABoAAAARAAAA" +
+        "OAYAABoAAAARAAAAUAYAAAAADAAdAAAAAAAJAAAAAAAAAAkAAQAAAAAABwAdAAAA" +
+        "AAADACQAAAAAAAQAJAAAAAAAAwAlAAAAAAAEACUAAAAAAAMAJgAAAAAABAAmAAAA" +
+        "AQAAACAAAAABAAYAIgAAAAQACgABAAAABgAJAAEAAAAJAAUAIQAAAAoACwABAAAA" +
+        "DAABACQAAAAOAAIAHgAAAA4ACAAjAAAAEAAIACMAAAAAAAAAAQAAAAYAAAAAAAAA" +
+        "GAAAAAAAAADcCQAAAAAAAAg8Y2xpbml0PgAGPGluaXQ+AAFMAAJMTAADTExMAARM" +
+        "TExMAAVMTExMTAAjTGlvL25lcm5hci9yaGluby9UaHJvd2FibGVSZXNvbHZlcjsA" +
+        "EUxqYXZhL2xhbmcvQ2xhc3M7ACJMamF2YS9sYW5nL0NsYXNzTm90Rm91bmRFeGNl" +
+        "cHRpb247ACJMamF2YS9sYW5nL0lsbGVnYWxBY2Nlc3NFeGNlcHRpb247ACBMamF2" +
+        "YS9sYW5nL05vQ2xhc3NEZWZGb3VuZEVycm9yOwAhTGphdmEvbGFuZy9Ob1N1Y2hN" +
+        "ZXRob2RFeGNlcHRpb247ABJMamF2YS9sYW5nL09iamVjdDsAHExqYXZhL2xhbmcv" +
+        "UnVudGltZUV4Y2VwdGlvbjsAEkxqYXZhL2xhbmcvU3RyaW5nOwAVTGphdmEvbGFu" +
+        "Zy9UaHJvd2FibGU7AClMamF2YS9sYW5nL1Vuc3VwcG9ydGVkT3BlcmF0aW9uRXhj" +
+        "ZXB0aW9uOwAtTGphdmEvbGFuZy9yZWZsZWN0L0ludm9jYXRpb25UYXJnZXRFeGNl" +
+        "cHRpb247ABpMamF2YS9sYW5nL3JlZmxlY3QvTWV0aG9kOwAgTG9yZy9tb3ppbGxh" +
+        "L2phdmFzY3JpcHQvQ29udGV4dDsAIUxvcmcvbW96aWxsYS9qYXZhc2NyaXB0L0Z1" +
+        "bmN0aW9uOwAnTG9yZy9tb3ppbGxhL2phdmFzY3JpcHQvUmhpbm9FeGNlcHRpb247" +
+        "ACNMb3JnL21vemlsbGEvamF2YXNjcmlwdC9TY3JpcHRhYmxlOwAWVGhyb3dhYmxl" +
+        "UmVzb2x2ZXIuamF2YQABVgACVkwAEltMamF2YS9sYW5nL0NsYXNzOwATW0xqYXZh" +
+        "L2xhbmcvT2JqZWN0OwAdYXNzdXJlQ29udGV4dEZvckN1cnJlbnRUaHJlYWQABGNh" +
+        "bGwAMmNvbS56aGVrYXNtaXJub3YuaW5uZXJjb3JlLm1vZC5leGVjdXRhYmxlLkNv" +
+        "bXBpbGVyAAdmb3JOYW1lAApnZXRNZXNzYWdlAAlnZXRNZXRob2QADmdldFBhcmVu" +
+        "dFNjb3BlAAZpbnZva2UAC2ludm9rZVJoaW5vAA1pbnZva2VSdW50aW1lAC16aGVr" +
+        "YXNtaXJub3YubGF1bmNoZXIubW9kLmV4ZWN1dGFibGUuQ29tcGlsZXIAAAADAAAA" +
+        "EAAOAA4AAAABAAAACAAAAAIAAAAIABIAAgAAAA4ADgABAAAACQAAAAQAAAANABAA" +
+        "EAATAAIAAAAGABMAAAAAABAABw4BERcCdx3FadN6AntoAEcABw4AHwAHDgEQEGYA" +
+        "LgIAAAcOACcDAAAABywBERAbagBGAgAABw4APwMAAAAHLAEREBtqADoCAAAHDgAz" +
+        "AwAAAAcsAREQG2oAAwAAAAMAAwBwBgAAQAAAABoAHwBxEAkAAAAMABoBHQASAiMi" +
+        "EgBuMAoAEAIMAGkAAAAOAA0AIgEEAG4QDQAAAAwAcCALAAEAJwENABoAJwBxEAkA" +
+        "AAAMABoBHQASAiMiEgBuMAoAEAIMAGkAAAAo4g0AIgEKAHAgDgABACcBDQAiAQoA" +
+        "cCAOAAEAJwENACjyAAAAAAUAAQAGAAAAFwAIAB4AAAARAA0AAwMCEgQdBTcCBB0F" +
+        "NwICMAU+AAABAAEAAQAAAIIGAAAEAAAAcBAMAAAADgADAAAAAwABAIcGAAAYAAAA" +
+        "YgEAABIAHwAGABICIyITAG4wDwABAgwAHwANABEADQAiAQoAcCAOAAEAJwENACj5" +
+        "AAAAAA4AAQABAgsWAw8AAAMAAgADAAAAkAYAAAkAAAByEBEAAQAMAHEwBAAQAgwA" +
+        "EQAAAAgAAwAFAAEAlwYAADIAAAASARIEcQACAAAADAI4BQ4AchASAAUADAASAyMz" +
+        "EwByUxAAJlAMABEAEgAfABAAKPUNAAcCcQACAAAADAM4BRAAchASAAUADAASESMR" +
+        "EwBNAgEEclEQADdQDAAo5gcQHwAQACjzAgAAABUAAQABAQkYAwACAAMAAACkBgAA" +
+        "CQAAAHIQEQABAAwAcTAEABACDAARAAAACAADAAUAAQCrBgAAMgAAABIBEgRxAAIA" +
+        "AAAMAjgFDgByEBIABQAMABIDIzMTAHJTEAAmUAwAEQASAB8AEAAo9Q0ABwJxAAIA" +
+        "AAAMAzgFEAByEBIABQAMABIRIxETAE0CAQRyURAAN1AMACjmBxAfABAAKPMCAAAA" +
+        "FQABAAEBDxgDAAIAAwAAALgGAAAJAAAAchARAAEADABxMAQAEAIMABEAAAAIAAMA" +
+        "BQABAL8GAAAyAAAAEgESBHEAAgAAAAwCOAUOAHIQEgAFAAwAEgMjMxMAclMQACZQ" +
+        "DAARABIAHwAQACj1DQAHAnEAAgAAAAwDOAUQAHIQEgAFAAwAEhEjERMATQIBBHJR" +
+        "EAA3UAwAKOYHEB8AEAAo8wIAAAAVAAEAAQEHGAEACQAAGgCYgATMDQGBgASIDwEK" +
+        "oA8BCfAPAQmUEAEJlBEBCbgRAQm4EgEJ3BIAAA4AAAAAAAAAAQAAAAAAAAABAAAA" +
+        "KAAAAHAAAAACAAAAFAAAABABAAADAAAADAAAAGABAAAEAAAAAQAAAPABAAAFAAAA" +
+        "EwAAAPgBAAAGAAAAAQAAAJACAAACIAAAKAAAALACAAABEAAABwAAACwGAAADEAAA" +
+        "AQAAAGwGAAADIAAACQAAAHAGAAABIAAACQAAAMwGAAAAIAAAAQAAANwJAAAAEAAA" +
+        "AQAAAAwKAAA=");
     return java.lang.Class.forName("io.nernar.rhino.ThrowableResolver", false, (function () {
         if (android.os.Build.VERSION.SDK_INT >= 26) {
             var buffer = java.nio.ByteBuffer.wrap(bytes);
+            // @ts-ignore
             return new Packages.dalvik.system.InMemoryDexClassLoader(buffer, getContext().getClassLoader());
         }
         var dex = new java.io.File(__dir__ + ".dex/0");
@@ -114,227 +199,270 @@ EXPORT("resolveThrowable", (function () {
         var stream = new java.io.FileOutputStream(dex);
         stream.write(bytes);
         stream.close();
+        // @ts-ignore
         return new Packages.dalvik.system.PathClassLoader(dex.getPath(), getContext().getClassLoader());
     })()).newInstance();
-})());
+})();
+EXPORT("resolveThrowable", resolveThrowable);
 /**
  * Delays the action in the interface
  * thread for the required time.
- * @param {function} action action
- * @param {number} [time] expectation
+ * @param action action
+ * @param time expectation
  */
-EXPORT("handle", function (action, time) {
-    var self = this;
-    getContext().runOnUiThread(function () {
-        new android.os.Handler().postDelayed(function () {
+var handle = function (action, time) {
+    getContext().runOnUiThread(new java.lang.Runnable({
+        run: function () { return new android.os.Handler().postDelayed(new java.lang.Runnable({
+            run: function () {
+                try {
+                    if (action) {
+                        action();
+                    }
+                }
+                catch (e) {
+                    reportError(e);
+                }
+            }
+        }), time >= 0 ? time : 0); }
+    }));
+};
+EXPORT("handle", handle);
+/**
+ * Delays the action in the interface and
+ * async waiting it in current thread.
+ * @param action to be acquired
+ * @param fallback default value
+ * @returns action result or {@link fallback}
+ */
+var acquire = function (action, fallback) {
+    var completed = false;
+    getContext().runOnUiThread(new java.lang.Runnable({
+        run: function () {
             try {
                 if (action) {
-                    action.call(self);
+                    var value = action();
+                    if (value !== undefined) {
+                        fallback = value;
+                    }
                 }
             }
             catch (e) {
                 reportError(e);
             }
-        }, time >= 0 ? time : 0);
-    });
-});
-/**
- * Delays the action in the interface and
- * async waiting it in current thread.
- * @param {function} action action
- * @param {any} [fallback] default value
- * @returns {any} action result or default
- */
-EXPORT("acquire", function (action, fallback) {
-    var self = this;
-    var completed = false;
-    getContext().runOnUiThread(function () {
-        try {
-            if (action) {
-                var value = action.call(self);
-                if (value !== undefined) {
-                    fallback = value;
-                }
-            }
+            completed = true;
         }
-        catch (e) {
-            reportError(e);
-        }
-        completed = true;
-    });
+    }));
     while (!completed) {
         java.lang.Thread.yield();
     }
     return fallback;
-});
+};
+EXPORT("acquire", acquire);
+/**
+ * Interrupts currently stacked threads, it must
+ * be implemented in your {@link java.lang.Thread Thread} itself.
+ */
+var interruptThreads = function () {
+    while (_this.threadStack.length > 0) {
+        var thread = _this.threadStack.shift();
+        if (!thread.isInterrupted()) {
+            thread.interrupt();
+        }
+    }
+};
+EXPORT("interruptThreads", interruptThreads);
 /**
  * Processes some action, that can be
  * completed in foreground or background.
- * @param {function} action action
- * @param {number} [priority] number between 1-10
- * @returns {java.lang.Thread} thread
+ * @param action action
+ * @param priority number between 1-10
  */
-EXPORT("handleThread", (function () {
-    var stack = [];
-    EXPORT("interruptThreads", function () {
-        while (stack.length > 0) {
-            var thread = stack.shift();
-            if (!thread.isInterrupted()) {
-                thread.interrupt();
-            }
-        }
-    });
-    return function (action, priority) {
-        var self = this;
-        var thread = new java.lang.Thread(function () {
+var handleThread = function (action, priority) {
+    var thread = new java.lang.Thread(new java.lang.Runnable({
+        run: function () {
             try {
                 if (action) {
-                    action.call(self);
+                    action();
                 }
             }
             catch (e) {
                 reportError(e);
             }
-            var index = stack.indexOf(thread);
+            var index = _this.threadStack.indexOf(thread);
             if (index != -1)
-                stack.splice(index, 1);
-        });
-        stack.push(thread);
-        if (priority !== undefined) {
-            thread.setPriority(priority);
+                _this.threadStack.splice(index, 1);
         }
-        thread.start();
-        return thread;
-    };
-})());
+    }));
+    _this.threadStack.push(thread);
+    if (priority !== undefined) {
+        thread.setPriority(priority);
+    }
+    thread.start();
+    return thread;
+};
+EXPORT("handleThread", handleThread);
 /**
  * Generates a random number from minimum to
  * maximum value. If only the first is indicated,
  * generation will occur with a probability of
  * one less than a given number.
- * @param {number} min minimum number
- * @param {number} [max] maximum number
- * @returns {number} random number
+ * @param min minimum number
+ * @param max maximum number
  */
-EXPORT("random", function (min, max) {
+var random = function (min, max) {
     max == undefined && (max = min - 1, min = 0);
     return Math.floor(Math.random() * (max - min + 1) + min);
-});
+};
+EXPORT("random", random);
 /**
  * Returns the difference between the current time
  * and the start time of the library.
  */
-EXPORT("getTime", function () {
-    return Date.now() - launchTime;
-});
+var getTime = function () { return Date.now() - launchTime; };
+EXPORT("getTime", getTime);
 /**
- * Translates exiting at launcher strokes,
- * replaces and formats [[%s]] arguments.
- * @param {string} str stroke to translate
- * @param {string|Array} [args] argument(s) to replace
- * @returns {string} translated stroke
+ * Returns `true` when numeral is verb in europic
+ * languages, e.g. when count % 10 = 1, etc.
+ * @param count integer
  */
-EXPORT("translateCounter", (function () {
-    var translate = function (str, args) {
-        try {
-            str = Translation.translate(str);
-            if (args !== undefined) {
-                if (!Array.isArray(args)) {
-                    args = [args];
-                }
-                args = args.map(function (value) {
-                    return "" + value;
-                });
-                str = java.lang.String.format(str, args);
+var isNumeralVerb = function (count) {
+    if (count < 0)
+        count = Math.abs(count);
+    return count % 10 == 1 && count % 100 != 11;
+};
+EXPORT("isNumeralVerb", isNumeralVerb);
+/**
+ * Returns `true` when numeral is many in europic
+ * languages, e.g. when count >= *5, count % 10 = 0, etc.
+ * @param count integer
+ */
+var isNumeralMany = function (count) {
+    if (count < 0)
+        count = Math.abs(count);
+    return count % 10 == 0 || count % 10 >= 5 || count % 100 - count % 10 == 10;
+};
+EXPORT("isNumeralMany", isNumeralMany);
+/**
+ * Translates existing strokes, added via
+ * {@link Translation.addTranslation}, replaces
+ * formatted `%s`, `%d` and similiar arguments.
+ * @param str stroke to translate
+ * @param args to replace with `format`
+ */
+var translate = function (str, args) {
+    try {
+        str = Translation.translate(str);
+        if (args !== undefined) {
+            if (!Array.isArray(args)) {
+                args = [args];
             }
-            return "" + str;
+            args = args.map(function (value) { return "" + value; });
+            str = java.lang.String.format(str, args);
         }
-        catch (e) {
-            return "" + str;
-        }
-    };
-    EXPORT("translate", translate);
-    var isNumeralVerb = function (count) {
-        if (count < 0)
-            count = Math.abs(count);
-        return count % 10 == 1 && count % 100 != 11;
-    };
-    EXPORT("isNumeralVerb", isNumeralVerb);
-    var isNumeralMany = function (count) {
-        if (count < 0)
-            count = Math.abs(count);
-        return count % 10 == 0 || count % 10 >= 5 || count % 100 - count % 10 == 10;
-    };
-    EXPORT("isNumeralMany", isNumeralMany);
-    return function (count, whenZero, whenVerb, whenLittle, whenMany, args) {
-        try {
-            if (args !== undefined) {
-                if (!Array.isArray(args)) {
-                    args = [args];
-                }
+        return "" + str;
+    }
+    catch (e) {
+        return "" + str;
+    }
+};
+EXPORT("translate", translate);
+/**
+ * Translates existing strokes by numeral, added via
+ * {@link Translation.addTranslation}, replaces
+ * formatted `%s`, `%d` and similiar arguments.
+ * Uses simply europic languages verbs in counters.
+ * @param count numeric integer to perform translation
+ * @param whenZero count = 0
+ * @param whenVerb count % 10 = 1, see {@link isNumeralVerb}
+ * @param whenLittle any case instead of others when's
+ * @param whenMany count >= *5, count % 10 = 0, see {@link isNumeralMany}
+ * @param args to replace with `format`, when count = value it will be remapped additionally
+ */
+var translateCounter = function (count, whenZero, whenVerb, whenLittle, whenMany, args) {
+    try {
+        if (args !== undefined) {
+            if (!Array.isArray(args)) {
+                args = [args];
             }
-            else
-                args = [count];
-            if (!(count == 0 || isNumeralMany(count))) {
-                var stroke_1 = "" + count;
-                stroke_1 = stroke_1.substring(0, stroke_1.length - 2);
-                args = args.map(function (value) {
-                    if (value == count) {
-                        return stroke_1;
-                    }
-                    return value;
-                });
-            }
-            return translate(count == 0 ? whenZero : isNumeralVerb(count) ? whenVerb :
-                isNumeralMany(count) ? whenMany : whenLittle, args);
         }
-        catch (e) {
-            reportError(e);
+        else
+            args = [count];
+        if (!(count == 0 || isNumeralMany(count))) {
+            var stroke_1 = "" + count;
+            stroke_1 = stroke_1.substring(0, stroke_1.length - 2);
+            args = args.map(function (value) { return value == count ? stroke_1 : value; });
         }
-        return translate(whenZero, args);
-    };
-})());
-EXPORT("getDecorView", function () {
-    return getContext().getWindow().getDecorView();
-});
-(function () {
-    var display = getContext().getWindowManager().getDefaultDisplay();
-    var getDisplayWidth = function () {
-        return Math.max(display.getWidth(), display.getHeight());
-    };
-    EXPORT("getDisplayWidth", getDisplayWidth);
-    EXPORT("getDisplayPercentWidth", function (x) {
-        return Math.round(getDisplayWidth() / 100 * x);
-    });
-    var getDisplayHeight = function () {
-        return Math.min(display.getWidth(), display.getHeight());
-    };
-    EXPORT("getDisplayHeight", getDisplayHeight);
-    EXPORT("getDisplayPercentHeight", function (y) {
-        return Math.round(getDisplayHeight() / 100 * y);
-    });
-    var metrics = getContext().getResources().getDisplayMetrics();
-    EXPORT("getDisplayDensity", function () {
-        return metrics.density;
-    });
-    EXPORT("getRelativeDisplayPercentWidth", function (x) {
-        return Math.round(getDisplayWidth() / 100 * x / metrics.density);
-    });
-    EXPORT("getRelativeDisplayPercentHeight", function (y) {
-        return Math.round(getDisplayHeight() / 100 * y / metrics.density);
-    });
-    EXPORT("toComplexUnitDip", function (value) {
-        return android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_DIP, value, metrics);
-    });
-    EXPORT("toComplexUnitSp", function (value) {
-        return android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_SP, value, metrics);
-    });
-})();
+        return translate(count == 0 ? whenZero : isNumeralVerb(count) ? whenVerb :
+            isNumeralMany(count) ? whenMany : whenLittle, args);
+    }
+    catch (e) {
+        reportError(e);
+    }
+    return translate(whenZero, args);
+};
+EXPORT("translateCounter", translateCounter);
+/**
+ * Shortcut to currently context decor window.
+ */
+var getDecorView = function () { return getContext().getWindow().getDecorView(); };
+EXPORT("getDecorView", getDecorView);
+/**
+ * Maximum display metric, in pixels.
+ */
+var getDisplayWidth = function () { return Math.max(_this.display.getWidth(), _this.display.getHeight()); };
+EXPORT("getDisplayWidth", getDisplayWidth);
+/**
+ * Relative to display width value.
+ * @param x percent of width
+ */
+var getDisplayPercentWidth = function (x) { return Math.round(getDisplayWidth() / 100 * x); };
+EXPORT("getDisplayPercentWidth", getDisplayPercentWidth);
+/**
+ * Minimum display metric, in pixels.
+ */
+var getDisplayHeight = function () { return Math.min(_this.display.getWidth(), _this.display.getHeight()); };
+EXPORT("getDisplayHeight", getDisplayHeight);
+/**
+ * Relative to display height value.
+ * @param y percent of height
+ */
+var getDisplayPercentHeight = function (y) { return Math.round(getDisplayHeight() / 100 * y); };
+EXPORT("getDisplayPercentHeight", getDisplayPercentHeight);
+/**
+ * Dependent constant per pixel size on display.
+ */
+var getDisplayDensity = function () { return _this.metrics.density; };
+EXPORT("getDisplayDensity", getDisplayDensity);
+/**
+ * Relative dependent on pixel size width value.
+ * @param x percent of width
+ */
+var getRelativeDisplayPercentWidth = function (x) { return Math.round(getDisplayWidth() / 100 * x / _this.metrics.density); };
+EXPORT("getRelativeDisplayPercentWidth", getRelativeDisplayPercentWidth);
+/**
+ * Relative dependent on pixel size height value.
+ * @param y percent of height
+ */
+var getRelativeDisplayPercentHeight = function (y) { return Math.round(getDisplayHeight() / 100 * y / _this.metrics.density); };
+EXPORT("getRelativeDisplayPercentHeight", getRelativeDisplayPercentHeight);
+/**
+ * Applies Android TypedValue `COMPLEX_UNIT_DIP`.
+ * @param value to change dimension
+ */
+var toComplexUnitDip = function (value) { return android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_DIP, value, _this.metrics); };
+EXPORT("toComplexUnitDip", toComplexUnitDip);
+/**
+ * Applies Android TypedValue `COMPLEX_UNIT_SP`.
+ * @param value to change dimension
+ */
+var toComplexUnitSp = function (value) { return android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_SP, value, _this.metrics); };
+EXPORT("toComplexUnitSp", toComplexUnitSp);
 /**
  * For caching, you must use the check amount
  * files and any other content, the so-called hashes.
+ * @param bytes to perform digest, e.g. `new java.lang.String(?).getBytes()`
  */
-EXPORT("toDigestMd5", (function () {
+var toDigestMd5 = (function () {
     var digest = java.security.MessageDigest.getInstance("md5");
     return function (bytes) {
         digest.update(bytes);
@@ -345,15 +473,14 @@ EXPORT("toDigestMd5", (function () {
         }
         return sb.toString();
     };
-})());
+})();
+EXPORT("toDigestMd5", toDigestMd5);
 /**
- * @requires Requires evaluation in interface thread.
  * Uses device vibrator service to make vibration.
- * @param {number} milliseconds to vibrate
+ * @param milliseconds to vibrate
  */
-EXPORT("vibrate", (function () {
+var vibrate = (function () {
     var service = getContext().getSystemService(android.content.Context.VIBRATOR_SERVICE);
-    return function (ms) {
-        return service.vibrate(ms);
-    };
-})());
+    return function (milliseconds) { return service.vibrate(milliseconds); };
+})();
+EXPORT("vibrate", vibrate);
