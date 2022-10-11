@@ -21,4 +21,4 @@ LIBRARY({
 	version: 1,
 	api: "AdaptedScript",
 	shared: true
-});
+})

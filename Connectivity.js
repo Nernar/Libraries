@@ -1,3 +1,18 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /*
 
    Copyright 2020-2022 Nernar (github.com/nernar)
@@ -22,576 +37,617 @@ LIBRARY({
     shared: true
 });
 /**
- * @constructor
- * Creates a connection to specific remote address.
- * @param {string} [address] address
+ * Connects and perform basic stream manipulation.
  */
-Connectivity = function (address) {
-    this.callback = {};
-    address && this.setAddress(address);
-};
-/**
- * Returns url was set by connection.
- * @returns {Object|null} java url
- */
-Connectivity.prototype.getUrl = function () {
-    return this.url || null;
-};
-/**
- * Sets current url as an java object.
- * If you need set address, use appropriate method.
- * @param {Object|null} url java url
- */
-Connectivity.prototype.setUrl = function (url) {
-    if ("" + url === url) {
-        Logger.Log("Connectivity: You should use Connectivity.setAddress instead of Connectivity.setUrl for string values", "WARNING");
-        this.setAddress(url);
-        return;
+var Connectivity = /** @class */ (function () {
+    /**
+     * Creates a connection to specific remote address.
+     * @param address of remote
+     */
+    function Connectivity(address) {
+        this.callback = {};
+        address && this.setAddress(address);
     }
-    if (this.callback.hasOwnProperty("onUrlChanged")) {
-        this.callback.onUrlChanged.call(this, url);
-    }
-    this.url = url;
-};
-/**
- * Use to specify remote address as a string.
- * @param {string} address address
- */
-Connectivity.prototype.setAddress = function (address) {
-    this.setUrl(new java.net.URL(address));
-};
-/**
- * Event receiver, use to track actions.
- * @param {Object} callback callback
- */
-Connectivity.prototype.setCallback = function (callback) {
-    if (callback && callback instanceof Object) {
-        this.callback = callback;
-        return;
-    }
-    this.callback = {};
-};
-/**
- * Opens and returns a data stream.
- * If url isn't specified, [[null]] is returned.
- * @returns {Object|null} java stream
- */
-Connectivity.prototype.getStream = function () {
-    try {
-        return this.url ? this.url.openStream() : null;
-    }
-    catch (e) {
-        var connection = this.getConnection();
-        return connection ? connection.getInputStream() : null;
-    }
-};
-/**
- * If connection doesn't exist, creates a new one.
- */
-Connectivity.prototype.validateConnection = function () {
-    if (this.connection == null || this.connection === undefined) {
-        this.connection = this.url ? this.url.openConnection() : null;
-        if (this.callback.hasOwnProperty("onCreateConnection")) {
-            this.callback.onCreateConnection.call(this, this.connection);
+    /**
+     * Returns url was set by connection.
+     */
+    Connectivity.prototype.getUrl = function () {
+        return this.url || null;
+    };
+    /**
+     * Sets current url as an java object.
+     * If you need set address, use appropriate method.
+     */
+    Connectivity.prototype.setUrl = function (url) {
+        if (typeof url == "string") {
+            Logger.Log("Connectivity: You should use Connectivity.setAddress instead of Connectivity.setUrl for string values", "WARNING");
+            return this.setAddress(url);
         }
-    }
-};
-/**
- * Opens or returns an existing connection.
- * @param {boolean} [force] if [[true]], willn't open a new connection
- * @returns {Object|null} java connection
- */
-Connectivity.prototype.getConnection = function (force) {
-    if (!force)
-        this.validateConnection();
-    return this.connection || null;
-};
-/**
- * Returns true if connection exists.
- * @returns {boolean} has connection
- */
-Connectivity.prototype.hasConnection = function () {
-    return this.getConnection(true) !== null;
-};
-/**
- * Connects to created url if it's created.
- * @throws if connection creation failed
- */
-Connectivity.prototype.connect = function () {
-    var connection = this.getConnection();
-    if (connection)
-        connection.connect();
-    else
-        MCSystem.throwException("Connectivity: Couldn't find any opened connection to connect");
-    if (this.callback.hasOwnProperty("onConnect")) {
-        this.callback.onConnect.call(this, connection);
-    }
-};
-/**
- * Disconnects from existing connection.
- * If connection doesn't exist, nothing happens.
- */
-Connectivity.prototype.disconnect = function () {
-    var connection = this.getConnection();
-    if (!connection)
-        return;
-    connection.disconnect();
-    delete this.connection;
-    if (this.callback.hasOwnProperty("onDisconnect")) {
-        this.callback.onDisconnect.call(this, connection);
-    }
-};
-/**
- * Gets length of output connection.
- * If connection failed, returns [[-1]].
- * @returns {number} bytes count
- */
-Connectivity.prototype.getLength = function () {
-    var connected = this.hasConnection();
-    if (!connected)
-        this.connect();
-    var connection = this.getConnection(), length = connection ? connection.getContentLength() : -1;
-    if (this.callback.hasOwnProperty("getLength")) {
-        this.callback.getLength.call(this, length);
-    }
-    connected && this.disconnect();
-    return length;
-};
-/**
- * Checks if there's has internet connection.
- * @returns {boolean} has connection
- */
-Connectivity.isOnline = function () {
-    var service = UI.getContext().getSystemService("connectivity");
-    if (service == null) {
-        return false;
-    }
-    var network = service.getActiveNetworkInfo();
-    if (network == null || !network.isConnectedOrConnecting()) {
-        return false;
-    }
-    return true;
-};
-/**
- * @constructor
- * Creates a connection to read text data.
- * @param {string} [address] address
- */
-Connectivity.Reader = function (address) {
-    address && this.setAddress(address);
-};
-Connectivity.Reader.prototype = new Connectivity;
-Connectivity.Reader.prototype.charset = "UTF-8";
-/**
- * Returns current charset of being read data.
- * @returns {string|null} charset
- */
-Connectivity.Reader.prototype.getCharset = function () {
-    return this.charset || null;
-};
-/**
- * Sets charset for new connections.
- * If charset is [[null]], system encoding will be used.
- * @param {string|null} character encoding
- * See {@link https://wikipedia.org/wiki/Character_encoding|character encoding} for more details.
- */
-Connectivity.Reader.prototype.setCharset = function (charset) {
-    if (charset) {
-        this.charset = charset;
-    }
-    else
-        delete this.charset;
-    if (this.callback.hasOwnProperty("onCharsetChanged")) {
-        this.callback.onCharsetChanged.call(this, this.charset);
-    }
-};
-/**
- * Returns stream reader, or [[null]] if create failed.
- * @returns {Object|null} java stream reader
- */
-Connectivity.Reader.prototype.getStreamReader = function () {
-    var stream = this.getStream();
-    if (!stream)
-        return null;
-    var charset = this.getCharset();
-    if (!charset) {
-        return new java.io.InputStreamReader(stream);
-    }
-    return new java.io.InputStreamReader(stream, charset);
-};
-/**
- * Returns [[true]] if read process is running.
- * @returns {boolean} in process
- */
-Connectivity.Reader.prototype.inProcess = function () {
-    return !!this.processing;
-};
-/**
- * Returns currently read data as an array.
- * Returns [[null]] if read process hasn't been started.
- * @returns {Object|null} readed array
- */
-Connectivity.Reader.prototype.getCurrentlyReaded = function () {
-    return this.result || null;
-};
-/**
- * Returns number of readed lines.
- * Returns [[-1]] if there is no connection.
- * @returns {number} readed lines count
- */
-Connectivity.Reader.prototype.getReadedCount = function () {
-    var readed = this.getCurrentlyReaded();
-    return readed ? readed.length : -1;
-};
-/**
- * Returns readed result, or [[null]] if none.
- * @returns {string|null} result
- */
-Connectivity.Reader.prototype.getResult = function () {
-    var readed = this.getCurrentlyReaded();
-    if (!readed)
-        return null;
-    return readed.join("\n");
-};
-/**
- * Reading process, isn't recommended run on main thread.
- * Wait until work is ended, and method will be return result.
- * @throws error will occur if there's no connection
- * @returns {string} read lines
- */
-Connectivity.Reader.prototype.read = function () {
-    var stream = this.getStreamReader();
-    if (!stream) {
-        MCSystem.throwException("Connectivity: Couldn't read stream, because one of params is missing");
-    }
-    var result = this.result = [], reader = new java.io.BufferedReader(stream);
-    this.processing = true;
-    if (this.callback.hasOwnProperty("onPrepare")) {
-        this.callback.onPrepare.call(this);
-    }
-    while (this.inProcess()) {
-        var line = reader.readLine();
-        if (line == null)
-            break;
-        else
-            result.push(line);
-        if (this.callback.hasOwnProperty("onReadLine")) {
-            this.callback.onReadLine.call(this, result, line);
+        if (this.callback.hasOwnProperty("onUrlChanged")) {
+            this.callback.onUrlChanged.call(this, url);
         }
-    }
-    if (this.callback.hasOwnProperty("onComplete")) {
-        this.callback.onComplete.call(this);
-    }
-    delete this.processing;
-    reader.close();
-    return this.getResult();
-};
-/**
- * @constructor
- * Loads a data stream into specified stream.
- * Must be overwritten with any prototype.
- * See [[getOutputStream()]] method for details.
- * @param {string} [address] address
- */
-Connectivity.Writer = function (address) {
-    address && this.setAddress(address);
-};
-Connectivity.Writer.prototype = new Connectivity;
-Connectivity.Writer.prototype.size = 8192;
-/**
- * Returns buffer size for reading data.
- * Returns [[-1]] if default value setted.
- * @returns {number} buffer size
- */
-Connectivity.Writer.prototype.getBufferSize = function () {
-    return this.size || -1;
-};
-/**
- * Sets read buffer size.
- * @param {number|null} size buffer size
- */
-Connectivity.Writer.prototype.setBufferSize = function (size) {
-    if (size)
-        this.size = size;
-    else
-        delete this.size;
-};
-/**
- * Returns length of readed data
- * Returns [[-1]] if there is no connection.
- * @returns {number} readed data length
- */
-Connectivity.Writer.prototype.getReadedCount = function () {
-    return this.count ? this.count : this.inProcess() ? 0 : -1;
-};
-/**
- * Returns a stream reader, can be overwritten in prototypes.
- * @returns {Object|null} java input stream
- */
-Connectivity.Writer.prototype.getStreamReader = function () {
-    var stream = this.getStream();
-    if (!stream)
-        return null;
-    var size = this.getBufferSize();
-    if (!size) {
-        return new java.io.BufferedInputStream(stream);
-    }
-    return new java.io.BufferedInputStream(stream, size);
-};
-/**
- * Returns output stream, must be overwritten by any prototype.
- * @throws error if not overwritten by prototype
- */
-Connectivity.Writer.prototype.getOutputStream = function () {
-    MCSystem.throwException("Connectivity: Connectivity.Writer.getOutputStream must be implemented");
-};
-/**
- * Returns [[true]] if download process is running.
- * @returns {boolean} in process
- */
-Connectivity.Writer.prototype.inProcess = function () {
-    return !!this.processing;
-};
-/**
- * Loads a file into given output data stream.
- * @throws error will occur if there's no connection
- * @throws error if output stream is invalid
- */
-Connectivity.Writer.prototype.download = function () {
-    var stream = this.getStreamReader(), output = this.getOutputStream();
-    if (!stream) {
-        MCSystem.throwException("Connectivity: Couldn't download stream, because input stream is missing");
-    }
-    if (!output) {
-        MCSystem.throwException("Connectivity: Couldn't download stream, because output stream is missing");
-    }
-    this.connect(), this.count = 0;
-    this.processing = true;
-    var size = this.getLength();
-    if (this.callback.hasOwnProperty("onPrepare")) {
-        this.callback.onPrepare.call(this, size);
-    }
-    var data = java.lang.reflect.Array.newInstance(java.lang.Byte.TYPE, 1024);
-    while (this.inProcess()) {
-        var count = stream.read(data);
-        if (count == -1) {
-            break;
-        }
-        else {
-            output.write(data, 0, count);
-            if (this.callback.hasOwnProperty("onProgress")) {
-                this.callback.onProgress.call(this, count, size);
-            }
-            this.count += count;
-        }
-    }
-    if (this.callback.hasOwnProperty("onComplete")) {
-        this.callback.onComplete.call(this, size);
-    }
-    this.processing = false;
-    this.disconnect();
-    output.flush();
-    output.close();
-    stream.close();
-};
-/**
- * @constructor
- * Loads a stream to file.
- * @param {string} [address] address
- * @param {string} [path] file path
- */
-Connectivity.Downloader = function (address, path) {
-    address && this.setAddress(address);
-    path && this.setPath(path);
-};
-Connectivity.Downloader.prototype = new Connectivity.Writer;
-/**
- * Returns currently specified file.
- * @returns {Object|null} java file
- */
-Connectivity.Downloader.prototype.getFile = function () {
-    return this.file || null;
-};
-/**
- * Sets java file to stream.
- * If argument isn't given, removes it.
- * @param {Object|null} file java file
- */
-Connectivity.Downloader.prototype.setFile = function (file) {
-    if (file) {
-        this.file = file;
-    }
-    else
-        delete this.file;
-    if (this.callback.hasOwnProperty("onFileChanged")) {
-        this.callback.onFileChanged.call(this, file);
-    }
-};
-/**
- * Returns currently file path.
- * Returns [[null]] if file isn't specified.
- * @returns {string|null} specified path
- */
-Connectivity.Downloader.prototype.getPath = function () {
-    var file = this.getFile();
-    return file ? file.getPath() : null;
-};
-/**
- * Sets path to file, replaces current file.
- * @param {string} path file path
- */
-Connectivity.Downloader.prototype.setPath = function (path) {
-    var file = new java.io.File(path);
-    if (file)
-        this.setFile(file);
-};
-/**
- * Returns output stream from file.
- * If file isn't specified, will return [[null]].
- * @returns {Object|null} output stream
- */
-Connectivity.Downloader.prototype.getOutputStream = function () {
-    var file = this.getFile();
-    if (!file)
-        return null;
-    if (!file.exists()) {
-        file.getParentFile().mkdirs();
-        file.createNewFile();
-    }
-    var stream = new java.io.FileOutputStream(file);
-    if (!stream)
-        return null;
-    return new java.io.BufferedOutputStream(stream);
-};
-/**
- * A quick way to create thread, errors are handled.
- * @param {Function} action action to handle
- * @param {Object|Function} [callback] fail callback
- * @param {any} connect will be passed into callback
- * @throws error if action isn't specified
- */
-Connectivity.handle = function (action, callback, connect) {
-    if (!(action instanceof Function)) {
-        MCSystem.throwException("Connectivity: Nothing to network handle");
-    }
-    new java.lang.Thread(function () {
-        try {
-            action();
-        }
-        catch (e) {
-            try {
-                if (callback && callback instanceof Object) {
-                    if (callback.hasOwnProperty("onFail")) {
-                        callback.onFail.call(connect);
-                        return;
-                    }
-                }
-                else if (callback instanceof Function) {
-                    callback.call(connect);
-                }
-                Logger.Log("Connectivity: Failed to read network data from a server", "WARNING");
-            }
-            catch (t) {
-                Logger.Log("Connectivity: A fatal error occurred while trying to network connect", "ERROR");
-            }
-        }
-    }).start();
-};
-/**
- * A quick way to length content from connection.
- * @param {string} address url address
- * @param {Object|Function} callback action or callback
- * @returns {boolean} has process started
- */
-Connectivity.lengthUrl = function (address, callback) {
-    if (!Connectivity.isOnline()) {
+        this.url = url;
+    };
+    /**
+     * Use to specify remote address as a string.
+     */
+    Connectivity.prototype.setAddress = function (address) {
+        this.setUrl(new java.net.URL(address));
+    };
+    /**
+     * Event receiver, use to track actions.
+     */
+    Connectivity.prototype.setCallback = function (callback) {
         if (callback && callback instanceof Object) {
-            if (callback.hasOwnProperty("isNotConnected")) {
-                callback.isNotConnected();
-            }
-        }
-        return false;
-    }
-    var connect = new Connectivity.Connect(address);
-    if (callback && callback instanceof Object) {
-        callback && connect.setCallback(callback);
-    }
-    this.handle(function () {
-        if (callback) {
-            if (callback instanceof Object) {
-                connect.getLength();
-            }
-            else
-                callback(connect.getLength());
-        }
-        else {
-            Logger.Log("Connectivity: Network action after doing stream length is missed", "WARNING");
-            connect.getLength();
-        }
-    }, callback, connect);
-    return true;
-};
-/**
- * A quick way to read data from connection.
- * @param {string} address url address
- * @param {Object|Function} callback action or callback
- * @returns {boolean} has process started
- */
-Connectivity.readUrl = function (address, callback) {
-    if (!Connectivity.isOnline()) {
-        if (callback && callback instanceof Object) {
-            if (callback.hasOwnProperty("isNotConnected")) {
-                callback.isNotConnected();
-            }
-        }
-        return false;
-    }
-    var reader = new Connectivity.Reader(address);
-    if (callback && callback instanceof Object) {
-        callback && reader.setCallback(callback);
-    }
-    this.handle(function () {
-        if (callback) {
-            if (callback instanceof Object) {
-                reader.read();
-            }
-            else
-                callback(reader.read());
-        }
-        else {
-            Logger.Log("Connectivity: Network action after doing stream reading is missed", "WARNING");
-            reader.read();
-        }
-    }, callback, reader);
-    return true;
-};
-/**
- * A quick way to download file from connection.
- * @param {string} address url address
- * @param {string} path file path
- * @param {Object|Function} [callback] action or callback
- * @returns {boolean} has process started
- */
-Connectivity.downloadUrl = function (address, path, callback) {
-    if (!Connectivity.isOnline()) {
-        if (callback && callback instanceof Object) {
-            if (callback.hasOwnProperty("isNotConnected")) {
-                callback.isNotConnected();
-            }
-        }
-        return false;
-    }
-    var writer = new Connectivity.Downloader(address, path);
-    if (callback && callback instanceof Object) {
-        callback && writer.setCallback(callback);
-    }
-    this.handle(function () {
-        if (callback instanceof Function) {
-            callback(writer.download());
+            this.callback = callback;
             return;
         }
-        writer.download();
-    }, callback, writer);
-    return true;
-};
+        this.callback = {};
+    };
+    /**
+     * Opens and returns a data stream.
+     * If url isn't specified, `null` is returned.
+     */
+    Connectivity.prototype.getStream = function () {
+        var connection = this.getConnection();
+        if (connection instanceof java.net.URLConnection) {
+            return connection ? connection.getInputStream() : null;
+        }
+        return this.url ? this.url.openStream() : null;
+    };
+    /**
+     * If connection doesn't exist, creates a new one.
+     * Method will be used automatically when it needed
+     * by corresponding {@link Connectivity.getConnection}.
+     */
+    Connectivity.prototype.validateConnection = function () {
+        if (!(this.connection instanceof java.io.InputStream || this.connection instanceof java.net.URLConnection)) {
+            this.connection = this.url ? this.url.openConnection() : null;
+            if (this.callback.hasOwnProperty("onCreateConnection")) {
+                this.callback.onCreateConnection.call(this, this.connection);
+            }
+        }
+    };
+    /**
+     * Opens or returns an existing connection.
+     * @param force `true` means just return currently connection
+     */
+    Connectivity.prototype.getConnection = function (force) {
+        if (!force)
+            this.validateConnection();
+        return this.connection || null;
+    };
+    /**
+     * Returns `true` if connection currently exists.
+     */
+    Connectivity.prototype.hasConnection = function () {
+        return this.connection != null;
+    };
+    /**
+     * Connects to created url if it's created.
+     * @throws if connection not actually found
+     */
+    Connectivity.prototype.connect = function () {
+        var connection = this.getConnection();
+        if (!this.hasConnection()) {
+            // @ts-ignore
+            MCSystem.throwException("Connectivity: Could not find any opened connection to connect!");
+        }
+        if (connection instanceof java.net.URLConnection) {
+            connection.connect();
+        }
+        if (this.callback.hasOwnProperty("onConnect")) {
+            this.callback.onConnect.call(this, connection);
+        }
+    };
+    /**
+     * Disconnects from existing connection.
+     * If connection doesn't exist, nothing happens.
+     */
+    Connectivity.prototype.disconnect = function () {
+        if (!this.hasConnection()) {
+            return false;
+        }
+        var connection = this.getConnection();
+        if (connection instanceof java.net.HttpURLConnection) {
+            connection.disconnect();
+        }
+        delete this.connection;
+        if (this.callback.hasOwnProperty("onDisconnect")) {
+            this.callback.onDisconnect.call(this, connection);
+        }
+        return true;
+    };
+    /**
+     * Gets length of output connection.
+     * If connection failed, returns `-1`.
+     */
+    Connectivity.prototype.getLength = function () {
+        var justConnected = this.hasConnection();
+        if (!justConnected)
+            this.connect();
+        var connection = this.getConnection();
+        if (!(connection instanceof java.net.URLConnection)) {
+            return -1;
+        }
+        var length = connection.getContentLength();
+        if (this.callback.hasOwnProperty("getLength")) {
+            this.callback.getLength.call(this, length);
+        }
+        if (!justConnected)
+            this.disconnect();
+        return length;
+    };
+    /**
+     * Checks if there's has network connection, it is not
+     * know internet actually availabled or not.
+     */
+    Connectivity.isOnline = function () {
+        var service = UI.getContext().getSystemService("connectivity");
+        if (service == null) {
+            return false;
+        }
+        var network = service.getActiveNetworkInfo();
+        return network != null && network.isConnectedOrConnecting();
+    };
+    return Connectivity;
+}());
+(function (Connectivity) {
+    /**
+     * Directly reads stream as multiline string.
+     */
+    var Reader = /** @class */ (function (_super) {
+        __extends(Reader, _super);
+        /**
+         * Creates a connection to read text data.
+         * @param address of remote
+         */
+        function Reader(address) {
+            var _this = _super.call(this, address) || this;
+            _this.callback = {};
+            _this.charset = "UTF-8";
+            _this.processing = false;
+            return _this;
+        }
+        /**
+         * Returns current charset of being read data.
+         */
+        Reader.prototype.getCharset = function () {
+            return this.charset || null;
+        };
+        /**
+         * Sets charset for new connections.
+         * If charset is `null`, system encoding will be used.
+         * @see {@link https://wikipedia.org/wiki/Character_encoding character encoding} for more details
+         */
+        Reader.prototype.setCharset = function (charset) {
+            this.charset = charset;
+            if (typeof charset != "string") {
+                delete this.charset;
+            }
+            if (this.callback.hasOwnProperty("onCharsetChanged")) {
+                this.callback.onCharsetChanged.call(this, this.charset);
+            }
+        };
+        /**
+         * Returns stream reader, or `null` if create failed.
+         */
+        Reader.prototype.getStreamReader = function () {
+            var stream = this.getStream();
+            if (stream == null) {
+                return null;
+            }
+            var charset = this.getCharset();
+            if (charset == null) {
+                return new java.io.InputStreamReader(stream);
+            }
+            return new java.io.InputStreamReader(stream, charset);
+        };
+        /**
+         * Returns `true` if read process is running.
+         */
+        Reader.prototype.inProcess = function () {
+            return this.processing;
+        };
+        /**
+         * Returns currently read data as an array.
+         * Returns `null` if read process hasn't been started.
+         */
+        Reader.prototype.getCurrentlyReaded = function () {
+            return this.result || null;
+        };
+        /**
+         * Returns number of readed lines.
+         * Returns `-1` if there is no connection.
+         */
+        Reader.prototype.getReadedCount = function () {
+            var readed = this.getCurrentlyReaded();
+            return readed == null ? -1 : readed.length;
+        };
+        /**
+         * Returns readed result, or `null` if none.
+         */
+        Reader.prototype.toResult = function () {
+            var _a;
+            return (_a = this.getCurrentlyReaded()) === null || _a === void 0 ? void 0 : _a.join("\n");
+        };
+        /**
+         * Reading process, isn't recommended run on main thread.
+         * Wait until work is ended, and method will be return result.
+         * @throws error will occur if there's no connection
+         */
+        Reader.prototype.read = function () {
+            var stream = this.getStreamReader();
+            if (stream == null) {
+                // @ts-ignore
+                MCSystem.throwException("Connectivity: Connectivity.Reader: Stream is not specified!");
+            }
+            this.result = [];
+            var reader = new java.io.BufferedReader(stream);
+            this.processing = true;
+            if (this.callback.hasOwnProperty("onPrepare")) {
+                this.callback.onPrepare.call(this);
+            }
+            while (this.inProcess()) {
+                var line = reader.readLine();
+                if (line == null) {
+                    break;
+                }
+                else {
+                    this.result.push(line);
+                }
+                if (this.callback.hasOwnProperty("onReadLine")) {
+                    this.callback.onReadLine.call(this, this.result, line);
+                }
+            }
+            if (this.callback.hasOwnProperty("onComplete")) {
+                this.callback.onComplete.call(this, this.result);
+            }
+            this.processing = false;
+            reader.close();
+            return this.toResult();
+        };
+        return Reader;
+    }(Connectivity));
+    Connectivity.Reader = Reader;
+    /**
+     * Connects to perform data transfering to output.
+     * @abstract must be overwritten with any prototype
+     */
+    var Writer = /** @class */ (function (_super) {
+        __extends(Writer, _super);
+        /**
+         * Loads a data stream into specified stream.
+         * @abstract must be overwritten with any prototype
+         * @see {@link getOutputStream} method for details
+         * @param address of remote
+         */
+        function Writer(address) {
+            var _this = _super.call(this, address) || this;
+            _this.callback = {};
+            _this.size = 8192;
+            _this.processing = false;
+            return _this;
+        }
+        /**
+         * Returns buffer size for reading data.
+         * Returns `-1` if value resetted.
+         */
+        Writer.prototype.getBufferSize = function () {
+            return this.size <= 0 ? -1 : this.size;
+        };
+        /**
+         * Sets read buffer size.
+         */
+        Writer.prototype.setBufferSize = function (size) {
+            if (typeof size == "undefined") {
+                this.size = 8192;
+                return;
+            }
+            this.size = size;
+        };
+        /**
+         * Returns length of readed data.
+         * Returns `-1` if there is no connection.
+         */
+        Writer.prototype.getReadedCount = function () {
+            if (typeof this.count == "undefined") {
+                return -1;
+            }
+            return this.count;
+        };
+        /**
+         * Returns a buffered stream reader, can be overwritten in prototypes.
+         */
+        Writer.prototype.getStreamReader = function () {
+            var stream = this.getStream();
+            if (stream == null) {
+                return null;
+            }
+            var size = this.getBufferSize();
+            if (size == -1) {
+                return new java.io.BufferedInputStream(stream);
+            }
+            return new java.io.BufferedInputStream(stream, size);
+        };
+        /**
+         * Returns `true` if download process is running.
+         */
+        Writer.prototype.inProcess = function () {
+            return this.processing;
+        };
+        /**
+         * Loads a stream into given output data stream.
+         * @throws error will occur if there's no connection
+         * @throws error if output stream is invalid
+         */
+        Writer.prototype.download = function () {
+            var stream = this.getStreamReader();
+            if (stream == null) {
+                // @ts-ignore
+                MCSystem.throwException("Connectivity: Could not download(), input stream is missing!");
+            }
+            var output = this.getOutputStream();
+            if (output == null) {
+                // @ts-ignore
+                MCSystem.throwException("Connectivity: Could not download(), output stream is missing!");
+            }
+            this.connect();
+            this.count = 0;
+            this.processing = true;
+            var size = this.getLength();
+            if (this.callback.hasOwnProperty("onPrepare")) {
+                this.callback.onPrepare.call(this, size);
+            }
+            var data = java.lang.reflect.Array.newInstance(java.lang.Byte.TYPE, 1024);
+            while (this.inProcess()) {
+                var count = stream.read(data);
+                if (count == -1) {
+                    break;
+                }
+                else {
+                    output.write(data, 0, count);
+                    if (this.callback.hasOwnProperty("onProgress")) {
+                        this.callback.onProgress.call(this, count, size);
+                    }
+                    this.count += count;
+                }
+            }
+            if (this.callback.hasOwnProperty("onComplete")) {
+                this.callback.onComplete.call(this, size);
+            }
+            this.processing = false;
+            this.disconnect();
+            output.flush();
+            output.close();
+            stream.close();
+        };
+        return Writer;
+    }(Connectivity));
+    Connectivity.Writer = Writer;
+    /**
+     * Perform transfering stream to filesystem.
+     */
+    var Downloader = /** @class */ (function (_super) {
+        __extends(Downloader, _super);
+        /**
+         * Loads a stream to specified file path.
+         * @param address of remote
+         * @param path file path
+         */
+        function Downloader(address, path) {
+            var _this = _super.call(this, address) || this;
+            _this.callback = {};
+            path && _this.setPath(path);
+            return _this;
+        }
+        /**
+         * Returns currently specified file.
+         */
+        Downloader.prototype.getFile = function () {
+            return this.file || null;
+        };
+        /**
+         * Sets java file to write stream.
+         * If argument isn't given, resets it.
+         */
+        Downloader.prototype.setFile = function (file) {
+            this.file = file;
+            if (!(file instanceof java.io.File)) {
+                delete this.file;
+            }
+            if (this.callback.hasOwnProperty("onFileChanged")) {
+                this.callback.onFileChanged.call(this, file);
+            }
+        };
+        /**
+         * Returns currently file path.
+         * Returns `null` if file isn't specified.
+         */
+        Downloader.prototype.getPath = function () {
+            var file = this.getFile();
+            return file == null ? null : file.getPath();
+        };
+        /**
+         * Sets path to file, replaces current output file.
+         */
+        Downloader.prototype.setPath = function (path) {
+            this.setFile(new java.io.File(path));
+        };
+        /**
+         * Returns output stream from file.
+         * @throws error when input file is not specified
+         */
+        Downloader.prototype.getOutputStream = function () {
+            var file = this.getFile();
+            if (file == null) {
+                // @ts-ignore
+                MCSystem.throwException("Connectivity: Connectivity.Downloader: Input file is not specified!");
+            }
+            if (!file.exists()) {
+                file.getParentFile().mkdirs();
+                file.createNewFile();
+            }
+            var stream = new java.io.FileOutputStream(file);
+            return new java.io.BufferedOutputStream(stream);
+        };
+        return Downloader;
+    }(Writer));
+    Connectivity.Downloader = Downloader;
+    /**
+     * A quick way to create thread, errors are handled.
+     * @param action action to handle
+     * @param callback fail callback
+     * @param connect will be passed into callback scope
+     * @throws error if action isn't specified
+     */
+    function handle(action, callback, connect) {
+        new java.lang.Thread(new java.lang.Runnable({
+            run: function () {
+                try {
+                    action();
+                }
+                catch (e) {
+                    try {
+                        if (callback && typeof callback == "object") {
+                            // @ts-expect-error
+                            if (callback.hasOwnProperty("onFail")) {
+                                if (connect) {
+                                    // @ts-expect-error
+                                    return callback.onFail.call(connect);
+                                }
+                                else {
+                                    // @ts-expect-error
+                                    return callback.onFail();
+                                }
+                            }
+                        }
+                        else if (typeof callback == "function") {
+                            if (connect) {
+                                callback.call(connect);
+                            }
+                            else {
+                                callback();
+                            }
+                        }
+                        Logger.Log("Connectivity: Failed to read network data from a server", "WARNING");
+                    }
+                    catch (t) {
+                        Logger.Log("Connectivity: A fatal error occurred while trying to network connect", "ERROR");
+                    }
+                }
+            }
+        })).start();
+    }
+    Connectivity.handle = handle;
+    /**
+     * A quick way to get content length from connection.
+     * @param address url address
+     * @param callback action or callback
+     * @see {@link Connectivity.getLength} for details
+     */
+    function lengthUrl(address, callback) {
+        if (!Connectivity.isOnline()) {
+            if (callback && typeof callback == "object") {
+                // @ts-expect-error
+                if (callback.hasOwnProperty("isNotConnected")) {
+                    // @ts-expect-error
+                    callback.isNotConnected();
+                }
+            }
+            return false;
+        }
+        var connect = new Connectivity(address);
+        if (callback && typeof callback == "object") {
+            connect.setCallback(callback);
+        }
+        handle(function () {
+            if (callback) {
+                if (typeof callback == "object") {
+                    connect.getLength();
+                }
+                else {
+                    callback(connect.getLength());
+                }
+            }
+            else {
+                Logger.Log("Connectivity: Network action after doing stream length is missed", "WARNING");
+                connect.getLength();
+            }
+            // @ts-expect-error
+        }, callback, connect);
+        return true;
+    }
+    Connectivity.lengthUrl = lengthUrl;
+    /**
+     * A quick way to read data from connection.
+     * @param address url address
+     * @param callback action or callback
+     * @see {@link Reader.read} for details
+     */
+    function readUrl(address, callback) {
+        if (!Connectivity.isOnline()) {
+            if (callback && typeof callback == "object") {
+                // @ts-expect-error
+                if (callback.hasOwnProperty("isNotConnected")) {
+                    // @ts-expect-error
+                    callback.isNotConnected();
+                }
+            }
+            return false;
+        }
+        var reader = new Connectivity.Reader(address);
+        if (callback && typeof callback == "object") {
+            reader.setCallback(callback);
+        }
+        handle(function () {
+            if (callback) {
+                if (typeof callback == "object") {
+                    reader.read();
+                }
+                else {
+                    callback(reader.read());
+                }
+            }
+            else {
+                Logger.Log("Connectivity: Network action after doing stream reading is missed", "WARNING");
+                reader.read();
+            }
+            // @ts-expect-error
+        }, callback, reader);
+        return true;
+    }
+    Connectivity.readUrl = readUrl;
+    /**
+     * A quick way to download file from connection.
+     * @param address url address
+     * @param path file path
+     * @param callback action or callback
+     * @see {@link Downloader.download} for details
+     */
+    function downloadUrl(address, path, callback) {
+        if (!Connectivity.isOnline()) {
+            if (callback && typeof callback == "object") {
+                // @ts-expect-error
+                if (callback.hasOwnProperty("isNotConnected")) {
+                    // @ts-expect-error
+                    callback.isNotConnected();
+                }
+            }
+            return false;
+        }
+        var writer = new Connectivity.Downloader(address, path);
+        if (callback && typeof callback == "object") {
+            callback && writer.setCallback(callback);
+        }
+        handle(function () {
+            writer.download();
+            if (typeof callback == "function") {
+                return callback();
+            }
+        }, callback, writer);
+        return true;
+    }
+    Connectivity.downloadUrl = downloadUrl;
+})(Connectivity || (Connectivity = {}));
 EXPORT("Connectivity", Connectivity);
