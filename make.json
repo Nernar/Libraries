@@ -3,16 +3,11 @@
 		"name": "Libraries",
 		"author": "Nernar"
 	},
-	"api": "Preloader",
+	"api": "AdaptedScript",
 	"target": {
 		"library": ".."
 	},
 	"sources": [
-		{
-			"type": "library",
-			"language": "javascript",
-			"source": "Action"
-		},
 		{
 			"type": "library",
 			"language": "typescript",
@@ -21,12 +16,7 @@
 		{
 			"type": "library",
 			"language": "javascript",
-			"source": "Drawable"
-		},
-		{
-			"type": "library",
-			"language": "javascript",
-			"source": "Environment"
+			"source": "ModBrowser.Query"
 		},
 		{
 			"type": "library",
@@ -36,12 +26,7 @@
 		{
 			"type": "library",
 			"language": "javascript",
-			"source": "JsonIo"
-		},
-		{
-			"type": "library",
-			"language": "javascript",
-			"source": "ModBrowser.Query"
+			"source": "Environment"
 		},
 		{
 			"type": "library",
@@ -51,21 +36,36 @@
 		{
 			"type": "library",
 			"language": "javascript",
+			"source": "Action"
+		},
+		{
+			"type": "library",
+			"language": "javascript",
+			"source": "Drawable"
+		},
+		{
+			"type": "library",
+			"language": "javascript",
 			"source": "Sequence"
 		},
 		{
 			"type": "library",
 			"language": "javascript",
-			"source": "Stacktrace"
+			"source": "Transition"
 		},
 		{
 			"type": "library",
 			"language": "javascript",
-			"source": "Transition"
+			"source": "JsonIo"
+		},
+		{
+			"type": "library",
+			"language": "javascript",
+			"source": "Stacktrace"
 		}
 	],
+	"debugIncludesExclude": [],
 	"resources": [],
 	"compile": [],
-	"additional": [],
-	"debugIncludesExclude": []
+	"additional": []
 }

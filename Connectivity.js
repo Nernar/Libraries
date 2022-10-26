@@ -205,7 +205,13 @@ var Connectivity = /** @class */ (function () {
         function Reader(address) {
             var _this = _super.call(this, address) || this;
             _this.callback = {};
+            /**
+             * @internal
+             */
             _this.charset = "UTF-8";
+            /**
+             * @internal
+             */
             _this.processing = false;
             return _this;
         }
@@ -325,7 +331,13 @@ var Connectivity = /** @class */ (function () {
         function Writer(address) {
             var _this = _super.call(this, address) || this;
             _this.callback = {};
+            /**
+             * @internal
+             */
             _this.size = 8192;
+            /**
+             * @internal
+             */
             _this.processing = false;
             return _this;
         }

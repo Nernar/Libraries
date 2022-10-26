@@ -9,7 +9,13 @@
 		onDisconnect?: (connection: java.io.InputStream | java.net.URLConnection) => void
 		getLength?: (length: number) => void
 	} = {}
+	/**
+	 * @internal
+	 */
 	private url: java.net.URL
+	/**
+	 * @internal
+	 */
 	private connection: java.io.InputStream | java.net.URLConnection
 
 	/**
@@ -188,8 +194,17 @@ namespace Connectivity {
 			onReadLine?: (readed: string[], line: string) => void
 			onComplete?: (readed: string[]) => void
 		} = {}
+		/**
+		 * @internal
+		 */
 		private charset = "UTF-8"
+		/**
+		 * @internal
+		 */
 		private processing = false
+		/**
+		 * @internal
+		 */
 		private result: string[]
 
 		/**
@@ -320,8 +335,17 @@ namespace Connectivity {
 			onProgress?: (count: number, size: number) => void
 			onComplete?: (size: number) => void
 		} = {}
+		/**
+		 * @internal
+		 */
 		private size = 8192
+		/**
+		 * @internal
+		 */
 		private count: number
+		/**
+		 * @internal
+		 */
 		private processing = false
 
 		/**
@@ -453,6 +477,9 @@ namespace Connectivity {
 			onComplete?: (size: number) => void
 			onFileChanged?: (file: java.io.File) => void
 		} = {}
+		/**
+		 * @internal
+		 */
 		private file: java.io.File
 
 		/**
@@ -528,7 +555,7 @@ namespace Connectivity {
 	 * @param connect will be passed into callback scope
 	 * @throws error if action isn't specified
 	 */
-	 export function handle(action: Function, callback?: () => void | {
+	export function handle(action: Function, callback?: () => void | {
 		onFail?: () => void
 	}, connect?: object) {
 		new java.lang.Thread(

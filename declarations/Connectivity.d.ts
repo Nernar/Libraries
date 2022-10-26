@@ -9,8 +9,6 @@ declare class Connectivity {
         onDisconnect?: (connection: java.io.InputStream | java.net.URLConnection) => void;
         getLength?: (length: number) => void;
     };
-    private url;
-    private connection;
     /**
      * Creates a connection to specific remote address.
      * @param address of remote
@@ -90,9 +88,6 @@ declare namespace Connectivity {
             onReadLine?: (readed: string[], line: string) => void;
             onComplete?: (readed: string[]) => void;
         };
-        private charset;
-        private processing;
-        private result;
         /**
          * Creates a connection to read text data.
          * @param address of remote
@@ -152,9 +147,6 @@ declare namespace Connectivity {
             onProgress?: (count: number, size: number) => void;
             onComplete?: (size: number) => void;
         };
-        private size;
-        private count;
-        private processing;
         /**
          * Loads a data stream into specified stream.
          * @abstract must be overwritten with any prototype
@@ -210,7 +202,6 @@ declare namespace Connectivity {
             onComplete?: (size: number) => void;
             onFileChanged?: (file: java.io.File) => void;
         };
-        private file;
         /**
          * Loads a stream to specified file path.
          * @param address of remote
