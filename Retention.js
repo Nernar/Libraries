@@ -21,7 +21,7 @@ LIBRARY({
     api: "AdaptedScript",
     shared: true
 });
-var _this = this;
+var _a, _b;
 /**
  * Milliseconds from moment when library started.
  */
@@ -52,10 +52,22 @@ EXPORT("minecraftVersion", minecraftVersion);
  */
 var getContext = function () { return UI.getContext(); };
 EXPORT("getContext", getContext);
-this.threadStack = [];
-this.display = getContext().getWindowManager().getDefaultDisplay();
-this.metrics = getContext().getResources().getDisplayMetrics();
-this.reportAction = function (error) {
+/**
+ * @internal
+ */
+var threadStack = [];
+/**
+ * @internal
+ */
+var display = (_a = getContext()) === null || _a === void 0 ? void 0 : _a.getWindowManager().getDefaultDisplay();
+/**
+ * @internal
+ */
+var metrics = (_b = getContext()) === null || _b === void 0 ? void 0 : _b.getResources().getDisplayMetrics();
+/**
+ * @internal
+ */
+var reportAction = function (error) {
     try {
         if (isHorizon) {
             // @ts-ignore
@@ -80,8 +92,8 @@ this.reportAction = function (error) {
  * useful for visualizing and debugging problems.
  */
 var reportError = function (error) {
-    if (_this.reportAction) {
-        _this.reportAction(error);
+    if (reportAction) {
+        reportAction(error);
     }
 };
 EXPORT("reportError", reportError);
@@ -91,7 +103,7 @@ EXPORT("reportError", reportError);
  * @param when action to perform with error
  */
 var registerReportAction = function (when) {
-    _this.reportAction = when;
+    reportAction = when;
 };
 EXPORT("registerReportAction", registerReportAction);
 /**
@@ -120,138 +132,75 @@ var showReportDialog = function (message, title, fallback) {
 };
 EXPORT("showReportDialog", showReportDialog);
 /**
- * Directly redirects native rhino JavaScript {@link Error} to
- * {@link java.lang.Throwable} instances.
- */
-var resolveThrowable = (function () {
-    var bytes = (function (base64) {
-        if (android.os.Build.VERSION.SDK_INT >= 26) {
-            return java.util.Base64.getDecoder().decode(new java.lang.String(base64).getBytes());
-        }
-        return android.util.Base64.decode(new java.lang.String(base64).getBytes(), android.util.Base64.NO_WRAP);
-    })("ZGV4CjAzNQA7yC65zIj/irByxZUNv+ejN5SKUkKw3cq4CgAAcAAAAHhWNBIAAAAA" +
-        "AAAAAAwKAAAoAAAAcAAAABQAAAAQAQAADAAAAGABAAABAAAA8AEAABMAAAD4AQAA" +
-        "AQAAAJACAAAICAAAsAIAALACAAC6AgAAwgIAAMUCAADJAgAAzgIAANQCAADbAgAA" +
-        "AAMAABMDAAA3AwAAWwMAAH0DAACgAwAAtAMAANIDAADmAwAA/QMAACgEAABXBAAA" +
-        "cwQAAJUEAAC4BAAA4QQAAAYFAAAeBQAAIQUAACUFAAA5BQAATgUAAG0FAABzBQAA" +
-        "pwUAALAFAAC8BQAAxwUAANcFAADfBQAA7AUAAPsFAAAHAAAACAAAAAkAAAAKAAAA" +
-        "CwAAAAwAAAANAAAADgAAAA8AAAAQAAAAEQAAABIAAAATAAAAFAAAABUAAAAWAAAA" +
-        "FwAAABkAAAAbAAAAHAAAAAMAAAABAAAAOAYAAAQAAAAGAAAAZAYAAAYAAAAGAAAA" +
-        "WAYAAAQAAAAGAAAASAYAAAUAAAAGAAAALAYAAAIAAAAIAAAAAAAAAAQAAAAMAAAA" +
-        "QAYAAAIAAAANAAAAAAAAAAIAAAAQAAAAAAAAABkAAAARAAAAAAAAABoAAAARAAAA" +
-        "OAYAABoAAAARAAAAUAYAAAAADAAdAAAAAAAJAAAAAAAAAAkAAQAAAAAABwAdAAAA" +
-        "AAADACQAAAAAAAQAJAAAAAAAAwAlAAAAAAAEACUAAAAAAAMAJgAAAAAABAAmAAAA" +
-        "AQAAACAAAAABAAYAIgAAAAQACgABAAAABgAJAAEAAAAJAAUAIQAAAAoACwABAAAA" +
-        "DAABACQAAAAOAAIAHgAAAA4ACAAjAAAAEAAIACMAAAAAAAAAAQAAAAYAAAAAAAAA" +
-        "GAAAAAAAAADcCQAAAAAAAAg8Y2xpbml0PgAGPGluaXQ+AAFMAAJMTAADTExMAARM" +
-        "TExMAAVMTExMTAAjTGlvL25lcm5hci9yaGluby9UaHJvd2FibGVSZXNvbHZlcjsA" +
-        "EUxqYXZhL2xhbmcvQ2xhc3M7ACJMamF2YS9sYW5nL0NsYXNzTm90Rm91bmRFeGNl" +
-        "cHRpb247ACJMamF2YS9sYW5nL0lsbGVnYWxBY2Nlc3NFeGNlcHRpb247ACBMamF2" +
-        "YS9sYW5nL05vQ2xhc3NEZWZGb3VuZEVycm9yOwAhTGphdmEvbGFuZy9Ob1N1Y2hN" +
-        "ZXRob2RFeGNlcHRpb247ABJMamF2YS9sYW5nL09iamVjdDsAHExqYXZhL2xhbmcv" +
-        "UnVudGltZUV4Y2VwdGlvbjsAEkxqYXZhL2xhbmcvU3RyaW5nOwAVTGphdmEvbGFu" +
-        "Zy9UaHJvd2FibGU7AClMamF2YS9sYW5nL1Vuc3VwcG9ydGVkT3BlcmF0aW9uRXhj" +
-        "ZXB0aW9uOwAtTGphdmEvbGFuZy9yZWZsZWN0L0ludm9jYXRpb25UYXJnZXRFeGNl" +
-        "cHRpb247ABpMamF2YS9sYW5nL3JlZmxlY3QvTWV0aG9kOwAgTG9yZy9tb3ppbGxh" +
-        "L2phdmFzY3JpcHQvQ29udGV4dDsAIUxvcmcvbW96aWxsYS9qYXZhc2NyaXB0L0Z1" +
-        "bmN0aW9uOwAnTG9yZy9tb3ppbGxhL2phdmFzY3JpcHQvUmhpbm9FeGNlcHRpb247" +
-        "ACNMb3JnL21vemlsbGEvamF2YXNjcmlwdC9TY3JpcHRhYmxlOwAWVGhyb3dhYmxl" +
-        "UmVzb2x2ZXIuamF2YQABVgACVkwAEltMamF2YS9sYW5nL0NsYXNzOwATW0xqYXZh" +
-        "L2xhbmcvT2JqZWN0OwAdYXNzdXJlQ29udGV4dEZvckN1cnJlbnRUaHJlYWQABGNh" +
-        "bGwAMmNvbS56aGVrYXNtaXJub3YuaW5uZXJjb3JlLm1vZC5leGVjdXRhYmxlLkNv" +
-        "bXBpbGVyAAdmb3JOYW1lAApnZXRNZXNzYWdlAAlnZXRNZXRob2QADmdldFBhcmVu" +
-        "dFNjb3BlAAZpbnZva2UAC2ludm9rZVJoaW5vAA1pbnZva2VSdW50aW1lAC16aGVr" +
-        "YXNtaXJub3YubGF1bmNoZXIubW9kLmV4ZWN1dGFibGUuQ29tcGlsZXIAAAADAAAA" +
-        "EAAOAA4AAAABAAAACAAAAAIAAAAIABIAAgAAAA4ADgABAAAACQAAAAQAAAANABAA" +
-        "EAATAAIAAAAGABMAAAAAABAABw4BERcCdx3FadN6AntoAEcABw4AHwAHDgEQEGYA" +
-        "LgIAAAcOACcDAAAABywBERAbagBGAgAABw4APwMAAAAHLAEREBtqADoCAAAHDgAz" +
-        "AwAAAAcsAREQG2oAAwAAAAMAAwBwBgAAQAAAABoAHwBxEAkAAAAMABoBHQASAiMi" +
-        "EgBuMAoAEAIMAGkAAAAOAA0AIgEEAG4QDQAAAAwAcCALAAEAJwENABoAJwBxEAkA" +
-        "AAAMABoBHQASAiMiEgBuMAoAEAIMAGkAAAAo4g0AIgEKAHAgDgABACcBDQAiAQoA" +
-        "cCAOAAEAJwENACjyAAAAAAUAAQAGAAAAFwAIAB4AAAARAA0AAwMCEgQdBTcCBB0F" +
-        "NwICMAU+AAABAAEAAQAAAIIGAAAEAAAAcBAMAAAADgADAAAAAwABAIcGAAAYAAAA" +
-        "YgEAABIAHwAGABICIyITAG4wDwABAgwAHwANABEADQAiAQoAcCAOAAEAJwENACj5" +
-        "AAAAAA4AAQABAgsWAw8AAAMAAgADAAAAkAYAAAkAAAByEBEAAQAMAHEwBAAQAgwA" +
-        "EQAAAAgAAwAFAAEAlwYAADIAAAASARIEcQACAAAADAI4BQ4AchASAAUADAASAyMz" +
-        "EwByUxAAJlAMABEAEgAfABAAKPUNAAcCcQACAAAADAM4BRAAchASAAUADAASESMR" +
-        "EwBNAgEEclEQADdQDAAo5gcQHwAQACjzAgAAABUAAQABAQkYAwACAAMAAACkBgAA" +
-        "CQAAAHIQEQABAAwAcTAEABACDAARAAAACAADAAUAAQCrBgAAMgAAABIBEgRxAAIA" +
-        "AAAMAjgFDgByEBIABQAMABIDIzMTAHJTEAAmUAwAEQASAB8AEAAo9Q0ABwJxAAIA" +
-        "AAAMAzgFEAByEBIABQAMABIRIxETAE0CAQRyURAAN1AMACjmBxAfABAAKPMCAAAA" +
-        "FQABAAEBDxgDAAIAAwAAALgGAAAJAAAAchARAAEADABxMAQAEAIMABEAAAAIAAMA" +
-        "BQABAL8GAAAyAAAAEgESBHEAAgAAAAwCOAUOAHIQEgAFAAwAEgMjMxMAclMQACZQ" +
-        "DAARABIAHwAQACj1DQAHAnEAAgAAAAwDOAUQAHIQEgAFAAwAEhEjERMATQIBBHJR" +
-        "EAA3UAwAKOYHEB8AEAAo8wIAAAAVAAEAAQEHGAEACQAAGgCYgATMDQGBgASIDwEK" +
-        "oA8BCfAPAQmUEAEJlBEBCbgRAQm4EgEJ3BIAAA4AAAAAAAAAAQAAAAAAAAABAAAA" +
-        "KAAAAHAAAAACAAAAFAAAABABAAADAAAADAAAAGABAAAEAAAAAQAAAPABAAAFAAAA" +
-        "EwAAAPgBAAAGAAAAAQAAAJACAAACIAAAKAAAALACAAABEAAABwAAACwGAAADEAAA" +
-        "AQAAAGwGAAADIAAACQAAAHAGAAABIAAACQAAAMwGAAAAIAAAAQAAANwJAAAAEAAA" +
-        "AQAAAAwKAAA=");
-    return java.lang.Class.forName("io.nernar.rhino.ThrowableResolver", false, (function () {
-        if (android.os.Build.VERSION.SDK_INT >= 26) {
-            var buffer = java.nio.ByteBuffer.wrap(bytes);
-            // @ts-ignore
-            return new Packages.dalvik.system.InMemoryDexClassLoader(buffer, getContext().getClassLoader());
-        }
-        var dex = new java.io.File(__dir__ + ".dex/0");
-        dex.getParentFile().mkdirs();
-        dex.createNewFile();
-        var stream = new java.io.FileOutputStream(dex);
-        stream.write(bytes);
-        stream.close();
-        // @ts-ignore
-        return new Packages.dalvik.system.PathClassLoader(dex.getPath(), getContext().getClassLoader());
-    })()).newInstance();
-})();
-EXPORT("resolveThrowable", resolveThrowable);
-/**
- * Delays the action in the interface
- * thread for the required time.
+ * Delays the action in main thread pool
+ * directly for the required time, unhandled
+ * exceptions will cause crash.
  * @param action action
  * @param time expectation
+ * @returns sheduled future when no associated context
+ */
+var handleOnThread = (function () {
+    if (getContext()) {
+        var HANDLER_1 = new android.os.Handler();
+        return function (action, time) {
+            var _a;
+            return (_a = getContext()) === null || _a === void 0 ? void 0 : _a.runOnUiThread(new java.lang.Runnable({
+                run: function () { return HANDLER_1.postDelayed(new java.lang.Runnable({
+                    run: action
+                }), time >= 0 ? time : 0); }
+            }));
+        };
+    }
+    var EXECUTOR = java.util.concurrent.Executors.newScheduledThreadPool(10);
+    return function (action, time) { return EXECUTOR.schedule(new java.lang.Runnable({
+        run: action
+    }), time >= 0 ? time : 0, java.util.concurrent.TimeUnit.MILLISECONDS); };
+})();
+EXPORT("handleOnThread", handleOnThread);
+/**
+ * Delays the action in main thread pool
+ * safely for the required time.
+ * @param action action
+ * @param time expectation
+ * @see {@link handleOnThread}
  */
 var handle = function (action, time) {
-    getContext().runOnUiThread(new java.lang.Runnable({
-        run: function () { return new android.os.Handler().postDelayed(new java.lang.Runnable({
-            run: function () {
-                try {
-                    if (action) {
-                        action();
-                    }
-                }
-                catch (e) {
-                    reportError(e);
-                }
+    return handleOnThread(function () {
+        try {
+            if (action) {
+                action();
             }
-        }), time >= 0 ? time : 0); }
-    }));
+        }
+        catch (e) {
+            reportError(e);
+        }
+    }, time);
 };
 EXPORT("handle", handle);
 /**
- * Delays the action in the interface and
+ * Delays the action in main thread pool and
  * async waiting it in current thread.
  * @param action to be acquired
  * @param fallback default value
  * @returns action result or {@link fallback}
+ * @see {@link handleOnThread}
  */
 var acquire = function (action, fallback) {
     var completed = false;
-    getContext().runOnUiThread(new java.lang.Runnable({
-        run: function () {
-            try {
-                if (action) {
-                    var value = action();
-                    if (value !== undefined) {
-                        fallback = value;
-                    }
+    handleOnThread(function () {
+        try {
+            if (action) {
+                var value = action();
+                if (value !== undefined) {
+                    fallback = value;
                 }
             }
-            catch (e) {
-                reportError(e);
-            }
-            completed = true;
         }
-    }));
+        catch (e) {
+            reportError(e);
+        }
+        completed = true;
+    });
     while (!completed) {
         java.lang.Thread.yield();
     }
@@ -263,8 +212,8 @@ EXPORT("acquire", acquire);
  * be implemented in your {@link java.lang.Thread Thread} itself.
  */
 var interruptThreads = function () {
-    while (_this.threadStack.length > 0) {
-        var thread = _this.threadStack.shift();
+    while (threadStack.length > 0) {
+        var thread = threadStack.shift();
         if (!thread.isInterrupted()) {
             thread.interrupt();
         }
@@ -288,12 +237,12 @@ var handleThread = function (action, priority) {
             catch (e) {
                 reportError(e);
             }
-            var index = _this.threadStack.indexOf(thread);
+            var index = threadStack.indexOf(thread);
             if (index != -1)
-                _this.threadStack.splice(index, 1);
+                threadStack.splice(index, 1);
         }
     }));
-    _this.threadStack.push(thread);
+    threadStack.push(thread);
     if (priority !== undefined) {
         thread.setPriority(priority);
     }
@@ -404,12 +353,12 @@ EXPORT("translateCounter", translateCounter);
 /**
  * Shortcut to currently context decor window.
  */
-var getDecorView = function () { return getContext().getWindow().getDecorView(); };
+var getDecorView = function () { var _a; return (_a = getContext()) === null || _a === void 0 ? void 0 : _a.getWindow().getDecorView(); };
 EXPORT("getDecorView", getDecorView);
 /**
  * Maximum display metric, in pixels.
  */
-var getDisplayWidth = function () { return Math.max(_this.display.getWidth(), _this.display.getHeight()); };
+var getDisplayWidth = function () { return Math.max(display === null || display === void 0 ? void 0 : display.getWidth(), display === null || display === void 0 ? void 0 : display.getHeight()); };
 EXPORT("getDisplayWidth", getDisplayWidth);
 /**
  * Relative to display width value.
@@ -420,7 +369,7 @@ EXPORT("getDisplayPercentWidth", getDisplayPercentWidth);
 /**
  * Minimum display metric, in pixels.
  */
-var getDisplayHeight = function () { return Math.min(_this.display.getWidth(), _this.display.getHeight()); };
+var getDisplayHeight = function () { return Math.min(display === null || display === void 0 ? void 0 : display.getWidth(), display === null || display === void 0 ? void 0 : display.getHeight()); };
 EXPORT("getDisplayHeight", getDisplayHeight);
 /**
  * Relative to display height value.
@@ -431,31 +380,31 @@ EXPORT("getDisplayPercentHeight", getDisplayPercentHeight);
 /**
  * Dependent constant per pixel size on display.
  */
-var getDisplayDensity = function () { return _this.metrics.density; };
+var getDisplayDensity = function () { return metrics === null || metrics === void 0 ? void 0 : metrics.density; };
 EXPORT("getDisplayDensity", getDisplayDensity);
 /**
  * Relative dependent on pixel size width value.
  * @param x percent of width
  */
-var getRelativeDisplayPercentWidth = function (x) { return Math.round(getDisplayWidth() / 100 * x / _this.metrics.density); };
+var getRelativeDisplayPercentWidth = function (x) { return Math.round(getDisplayWidth() / 100 * x / (metrics === null || metrics === void 0 ? void 0 : metrics.density)); };
 EXPORT("getRelativeDisplayPercentWidth", getRelativeDisplayPercentWidth);
 /**
  * Relative dependent on pixel size height value.
  * @param y percent of height
  */
-var getRelativeDisplayPercentHeight = function (y) { return Math.round(getDisplayHeight() / 100 * y / _this.metrics.density); };
+var getRelativeDisplayPercentHeight = function (y) { return Math.round(getDisplayHeight() / 100 * y / (metrics === null || metrics === void 0 ? void 0 : metrics.density)); };
 EXPORT("getRelativeDisplayPercentHeight", getRelativeDisplayPercentHeight);
 /**
  * Applies Android TypedValue `COMPLEX_UNIT_DIP`.
  * @param value to change dimension
  */
-var toComplexUnitDip = function (value) { return android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_DIP, value, _this.metrics); };
+var toComplexUnitDip = function (value) { return android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_DIP, value, metrics); };
 EXPORT("toComplexUnitDip", toComplexUnitDip);
 /**
  * Applies Android TypedValue `COMPLEX_UNIT_SP`.
  * @param value to change dimension
  */
-var toComplexUnitSp = function (value) { return android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_SP, value, _this.metrics); };
+var toComplexUnitSp = function (value) { return android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_SP, value, metrics); };
 EXPORT("toComplexUnitSp", toComplexUnitSp);
 /**
  * For caching, you must use the check amount
@@ -480,7 +429,8 @@ EXPORT("toDigestMd5", toDigestMd5);
  * @param milliseconds to vibrate
  */
 var vibrate = (function () {
-    var service = getContext().getSystemService(android.content.Context.VIBRATOR_SERVICE);
-    return function (milliseconds) { return service.vibrate(milliseconds); };
+    var _a;
+    var service = (_a = getContext()) === null || _a === void 0 ? void 0 : _a.getSystemService(android.content.Context.VIBRATOR_SERVICE);
+    return function (milliseconds) { return service === null || service === void 0 ? void 0 : service.vibrate(milliseconds); };
 })();
 EXPORT("vibrate", vibrate);

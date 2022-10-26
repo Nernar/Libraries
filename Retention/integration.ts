@@ -36,11 +36,22 @@ const getContext = () => UI.getContext()
 
 EXPORT("getContext", getContext)
 
-this.threadStack = []
-this.display = getContext().getWindowManager().getDefaultDisplay()
-this.metrics = getContext().getResources().getDisplayMetrics()
-
-this.reportAction = (error: any) => {
+/**
+ * @internal
+ */
+let threadStack = []
+/**
+ * @internal
+ */
+let display = getContext()?.getWindowManager().getDefaultDisplay()
+/**
+ * @internal
+ */
+let metrics = getContext()?.getResources().getDisplayMetrics()
+/**
+ * @internal
+ */
+let reportAction = (error: any) => {
 	try {
 		if (isHorizon) {
 			// @ts-ignore
@@ -63,8 +74,8 @@ this.reportAction = (error: any) => {
  * useful for visualizing and debugging problems.
  */
 const reportError = (error: any) => {
-	if (this.reportAction) {
-		this.reportAction(error)
+	if (reportAction) {
+		reportAction(error)
 	}
 }
 
@@ -76,7 +87,7 @@ EXPORT("reportError", reportError)
  * @param when action to perform with error
  */
 const registerReportAction = (when: (error: any) => void) => {
-	this.reportAction = when
+	reportAction = when
 }
 
 EXPORT("registerReportAction", registerReportAction)
@@ -107,149 +118,83 @@ const showReportDialog = (message: string, title: string, fallback?: Function): 
 EXPORT("showReportDialog", showReportDialog)
 
 /**
- * Directly redirects native rhino JavaScript {@link Error} to
- * {@link java.lang.Throwable} instances.
- */
-const resolveThrowable = ((): {
-	invoke(what: Function, when: (th: java.lang.Throwable) => void): any
-	invokeRuntime(what: Function, when: (th: java.lang.Throwable) => void): any
-	invokeRhino(what: Function, when: (th: java.lang.Throwable) => void): any
-} => {
-	let bytes = (base64 => {
-		if (android.os.Build.VERSION.SDK_INT >= 26) {
-			return java.util.Base64.getDecoder().decode(new java.lang.String(base64).getBytes())
-		}
-		return android.util.Base64.decode(new java.lang.String(base64).getBytes(), android.util.Base64.NO_WRAP)
-	})("ZGV4CjAzNQA7yC65zIj/irByxZUNv+ejN5SKUkKw3cq4CgAAcAAAAHhWNBIAAAAA" +
-		"AAAAAAwKAAAoAAAAcAAAABQAAAAQAQAADAAAAGABAAABAAAA8AEAABMAAAD4AQAA" +
-		"AQAAAJACAAAICAAAsAIAALACAAC6AgAAwgIAAMUCAADJAgAAzgIAANQCAADbAgAA" +
-		"AAMAABMDAAA3AwAAWwMAAH0DAACgAwAAtAMAANIDAADmAwAA/QMAACgEAABXBAAA" +
-		"cwQAAJUEAAC4BAAA4QQAAAYFAAAeBQAAIQUAACUFAAA5BQAATgUAAG0FAABzBQAA" +
-		"pwUAALAFAAC8BQAAxwUAANcFAADfBQAA7AUAAPsFAAAHAAAACAAAAAkAAAAKAAAA" +
-		"CwAAAAwAAAANAAAADgAAAA8AAAAQAAAAEQAAABIAAAATAAAAFAAAABUAAAAWAAAA" +
-		"FwAAABkAAAAbAAAAHAAAAAMAAAABAAAAOAYAAAQAAAAGAAAAZAYAAAYAAAAGAAAA" +
-		"WAYAAAQAAAAGAAAASAYAAAUAAAAGAAAALAYAAAIAAAAIAAAAAAAAAAQAAAAMAAAA" +
-		"QAYAAAIAAAANAAAAAAAAAAIAAAAQAAAAAAAAABkAAAARAAAAAAAAABoAAAARAAAA" +
-		"OAYAABoAAAARAAAAUAYAAAAADAAdAAAAAAAJAAAAAAAAAAkAAQAAAAAABwAdAAAA" +
-		"AAADACQAAAAAAAQAJAAAAAAAAwAlAAAAAAAEACUAAAAAAAMAJgAAAAAABAAmAAAA" +
-		"AQAAACAAAAABAAYAIgAAAAQACgABAAAABgAJAAEAAAAJAAUAIQAAAAoACwABAAAA" +
-		"DAABACQAAAAOAAIAHgAAAA4ACAAjAAAAEAAIACMAAAAAAAAAAQAAAAYAAAAAAAAA" +
-		"GAAAAAAAAADcCQAAAAAAAAg8Y2xpbml0PgAGPGluaXQ+AAFMAAJMTAADTExMAARM" +
-		"TExMAAVMTExMTAAjTGlvL25lcm5hci9yaGluby9UaHJvd2FibGVSZXNvbHZlcjsA" +
-		"EUxqYXZhL2xhbmcvQ2xhc3M7ACJMamF2YS9sYW5nL0NsYXNzTm90Rm91bmRFeGNl" +
-		"cHRpb247ACJMamF2YS9sYW5nL0lsbGVnYWxBY2Nlc3NFeGNlcHRpb247ACBMamF2" +
-		"YS9sYW5nL05vQ2xhc3NEZWZGb3VuZEVycm9yOwAhTGphdmEvbGFuZy9Ob1N1Y2hN" +
-		"ZXRob2RFeGNlcHRpb247ABJMamF2YS9sYW5nL09iamVjdDsAHExqYXZhL2xhbmcv" +
-		"UnVudGltZUV4Y2VwdGlvbjsAEkxqYXZhL2xhbmcvU3RyaW5nOwAVTGphdmEvbGFu" +
-		"Zy9UaHJvd2FibGU7AClMamF2YS9sYW5nL1Vuc3VwcG9ydGVkT3BlcmF0aW9uRXhj" +
-		"ZXB0aW9uOwAtTGphdmEvbGFuZy9yZWZsZWN0L0ludm9jYXRpb25UYXJnZXRFeGNl" +
-		"cHRpb247ABpMamF2YS9sYW5nL3JlZmxlY3QvTWV0aG9kOwAgTG9yZy9tb3ppbGxh" +
-		"L2phdmFzY3JpcHQvQ29udGV4dDsAIUxvcmcvbW96aWxsYS9qYXZhc2NyaXB0L0Z1" +
-		"bmN0aW9uOwAnTG9yZy9tb3ppbGxhL2phdmFzY3JpcHQvUmhpbm9FeGNlcHRpb247" +
-		"ACNMb3JnL21vemlsbGEvamF2YXNjcmlwdC9TY3JpcHRhYmxlOwAWVGhyb3dhYmxl" +
-		"UmVzb2x2ZXIuamF2YQABVgACVkwAEltMamF2YS9sYW5nL0NsYXNzOwATW0xqYXZh" +
-		"L2xhbmcvT2JqZWN0OwAdYXNzdXJlQ29udGV4dEZvckN1cnJlbnRUaHJlYWQABGNh" +
-		"bGwAMmNvbS56aGVrYXNtaXJub3YuaW5uZXJjb3JlLm1vZC5leGVjdXRhYmxlLkNv" +
-		"bXBpbGVyAAdmb3JOYW1lAApnZXRNZXNzYWdlAAlnZXRNZXRob2QADmdldFBhcmVu" +
-		"dFNjb3BlAAZpbnZva2UAC2ludm9rZVJoaW5vAA1pbnZva2VSdW50aW1lAC16aGVr" +
-		"YXNtaXJub3YubGF1bmNoZXIubW9kLmV4ZWN1dGFibGUuQ29tcGlsZXIAAAADAAAA" +
-		"EAAOAA4AAAABAAAACAAAAAIAAAAIABIAAgAAAA4ADgABAAAACQAAAAQAAAANABAA" +
-		"EAATAAIAAAAGABMAAAAAABAABw4BERcCdx3FadN6AntoAEcABw4AHwAHDgEQEGYA" +
-		"LgIAAAcOACcDAAAABywBERAbagBGAgAABw4APwMAAAAHLAEREBtqADoCAAAHDgAz" +
-		"AwAAAAcsAREQG2oAAwAAAAMAAwBwBgAAQAAAABoAHwBxEAkAAAAMABoBHQASAiMi" +
-		"EgBuMAoAEAIMAGkAAAAOAA0AIgEEAG4QDQAAAAwAcCALAAEAJwENABoAJwBxEAkA" +
-		"AAAMABoBHQASAiMiEgBuMAoAEAIMAGkAAAAo4g0AIgEKAHAgDgABACcBDQAiAQoA" +
-		"cCAOAAEAJwENACjyAAAAAAUAAQAGAAAAFwAIAB4AAAARAA0AAwMCEgQdBTcCBB0F" +
-		"NwICMAU+AAABAAEAAQAAAIIGAAAEAAAAcBAMAAAADgADAAAAAwABAIcGAAAYAAAA" +
-		"YgEAABIAHwAGABICIyITAG4wDwABAgwAHwANABEADQAiAQoAcCAOAAEAJwENACj5" +
-		"AAAAAA4AAQABAgsWAw8AAAMAAgADAAAAkAYAAAkAAAByEBEAAQAMAHEwBAAQAgwA" +
-		"EQAAAAgAAwAFAAEAlwYAADIAAAASARIEcQACAAAADAI4BQ4AchASAAUADAASAyMz" +
-		"EwByUxAAJlAMABEAEgAfABAAKPUNAAcCcQACAAAADAM4BRAAchASAAUADAASESMR" +
-		"EwBNAgEEclEQADdQDAAo5gcQHwAQACjzAgAAABUAAQABAQkYAwACAAMAAACkBgAA" +
-		"CQAAAHIQEQABAAwAcTAEABACDAARAAAACAADAAUAAQCrBgAAMgAAABIBEgRxAAIA" +
-		"AAAMAjgFDgByEBIABQAMABIDIzMTAHJTEAAmUAwAEQASAB8AEAAo9Q0ABwJxAAIA" +
-		"AAAMAzgFEAByEBIABQAMABIRIxETAE0CAQRyURAAN1AMACjmBxAfABAAKPMCAAAA" +
-		"FQABAAEBDxgDAAIAAwAAALgGAAAJAAAAchARAAEADABxMAQAEAIMABEAAAAIAAMA" +
-		"BQABAL8GAAAyAAAAEgESBHEAAgAAAAwCOAUOAHIQEgAFAAwAEgMjMxMAclMQACZQ" +
-		"DAARABIAHwAQACj1DQAHAnEAAgAAAAwDOAUQAHIQEgAFAAwAEhEjERMATQIBBHJR" +
-		"EAA3UAwAKOYHEB8AEAAo8wIAAAAVAAEAAQEHGAEACQAAGgCYgATMDQGBgASIDwEK" +
-		"oA8BCfAPAQmUEAEJlBEBCbgRAQm4EgEJ3BIAAA4AAAAAAAAAAQAAAAAAAAABAAAA" +
-		"KAAAAHAAAAACAAAAFAAAABABAAADAAAADAAAAGABAAAEAAAAAQAAAPABAAAFAAAA" +
-		"EwAAAPgBAAAGAAAAAQAAAJACAAACIAAAKAAAALACAAABEAAABwAAACwGAAADEAAA" +
-		"AQAAAGwGAAADIAAACQAAAHAGAAABIAAACQAAAMwGAAAAIAAAAQAAANwJAAAAEAAA" +
-		"AQAAAAwKAAA=")
-	return java.lang.Class.forName("io.nernar.rhino.ThrowableResolver", false, (() => {
-		if (android.os.Build.VERSION.SDK_INT >= 26) {
-			let buffer = java.nio.ByteBuffer.wrap(bytes)
-			// @ts-ignore
-			return new Packages.dalvik.system.InMemoryDexClassLoader(buffer, getContext().getClassLoader())
-		}
-		let dex = new java.io.File(__dir__ + ".dex/0")
-		dex.getParentFile().mkdirs()
-		dex.createNewFile()
-		let stream = new java.io.FileOutputStream(dex)
-		stream.write(bytes)
-		stream.close()
-		// @ts-ignore
-		return new Packages.dalvik.system.PathClassLoader(dex.getPath(), getContext().getClassLoader())
-	})()).newInstance()
-})()
-
-EXPORT("resolveThrowable", resolveThrowable)
-
-/**
- * Delays the action in the interface
- * thread for the required time.
+ * Delays the action in main thread pool
+ * directly for the required time, unhandled
+ * exceptions will cause crash.
  * @param action action
  * @param time expectation
+ * @returns sheduled future when no associated context
  */
-const handle = (action: Function, time?: number) => {
-	getContext().runOnUiThread(
+const handleOnThread = ((): (action: () => void, time?: number) => void | java.util.concurrent.ScheduledFuture<any> => {
+	if (getContext()) {
+		const HANDLER = new android.os.Handler()
+		return (action: () => void, time?: number) => getContext()?.runOnUiThread(
+			new java.lang.Runnable({
+				run: () => HANDLER.postDelayed(
+					new java.lang.Runnable({
+						run: action
+					}),
+					time >= 0 ? time : 0
+				)
+			})
+		)
+	}
+	const EXECUTOR = java.util.concurrent.Executors.newScheduledThreadPool(10)
+	return (action: () => void, time?: number) => EXECUTOR.schedule(
 		new java.lang.Runnable({
-			run: () => new android.os.Handler().postDelayed(
-				new java.lang.Runnable({
-					run: () => {
-						try {
-							if (action) {
-								action()
-							}
-						} catch (e) {
-							reportError(e)
-						}
-					}
-				}),
-				time >= 0 ? time : 0
-			)
-		})
+			run: action
+		}),
+		time >= 0 ? time : 0,
+		java.util.concurrent.TimeUnit.MILLISECONDS
 	)
+})()
+
+EXPORT("handleOnThread", handleOnThread);
+
+/**
+ * Delays the action in main thread pool
+ * safely for the required time.
+ * @param action action
+ * @param time expectation
+ * @see {@link handleOnThread}
+ */
+const handle = (action: () => void, time?: number) => {
+	return handleOnThread(() => {
+		try {
+			if (action) {
+				action()
+			}
+		} catch (e) {
+			reportError(e)
+		}
+	}, time)
 }
 
 EXPORT("handle", handle)
 
 /**
- * Delays the action in the interface and
+ * Delays the action in main thread pool and
  * async waiting it in current thread.
  * @param action to be acquired
  * @param fallback default value
  * @returns action result or {@link fallback}
+ * @see {@link handleOnThread}
  */
-const acquire = (action: Function, fallback?: any): typeof fallback | any => {
+const acquire = (action: () => any, fallback?: any): any => {
 	let completed = false
-	getContext().runOnUiThread(new java.lang.Runnable({
-		run: () => {
-			try {
-				if (action) {
-					let value = action()
-					if (value !== undefined) {
-						fallback = value
-					}
+	handleOnThread(() => {
+		try {
+			if (action) {
+				let value = action()
+				if (value !== undefined) {
+					fallback = value
 				}
-			} catch (e) {
-				reportError(e)
 			}
-			completed = true
+		} catch (e) {
+			reportError(e)
 		}
-	}))
+		completed = true
+	})
 	while (!completed) {
 		java.lang.Thread.yield()
 	}
@@ -263,8 +208,8 @@ EXPORT("acquire", acquire)
  * be implemented in your {@link java.lang.Thread Thread} itself.
  */
 const interruptThreads = () => {
-	while (this.threadStack.length > 0) {
-		let thread = this.threadStack.shift()
+	while (threadStack.length > 0) {
+		let thread = threadStack.shift()
 		if (!thread.isInterrupted()) {
 			thread.interrupt()
 		}
@@ -279,7 +224,7 @@ EXPORT("interruptThreads", interruptThreads)
  * @param action action
  * @param priority number between 1-10
  */
-const handleThread = (action: Function, priority?: number) => {
+const handleThread = (action: () => void, priority?: number) => {
 	let thread = new java.lang.Thread(
 		new java.lang.Runnable({
 			run: () => {
@@ -290,12 +235,12 @@ const handleThread = (action: Function, priority?: number) => {
 				} catch (e) {
 					reportError(e)
 				}
-				let index = this.threadStack.indexOf(thread)
-				if (index != -1) this.threadStack.splice(index, 1)
+				let index = threadStack.indexOf(thread)
+				if (index != -1) threadStack.splice(index, 1)
 			}
 		})
 	)
-	this.threadStack.push(thread)
+	threadStack.push(thread)
 	if (priority !== undefined) {
 		thread.setPriority(priority)
 	}
@@ -414,14 +359,14 @@ EXPORT("translateCounter", translateCounter)
 /**
  * Shortcut to currently context decor window.
  */
-const getDecorView = () => getContext().getWindow().getDecorView()
+const getDecorView = () => getContext()?.getWindow().getDecorView()
 
 EXPORT("getDecorView", getDecorView)
 
 /**
  * Maximum display metric, in pixels.
  */
-const getDisplayWidth = () => Math.max(this.display.getWidth(), this.display.getHeight())
+const getDisplayWidth = () => Math.max(display?.getWidth(), display?.getHeight())
 
 EXPORT("getDisplayWidth", getDisplayWidth)
 
@@ -436,7 +381,7 @@ EXPORT("getDisplayPercentWidth", getDisplayPercentWidth)
 /**
  * Minimum display metric, in pixels.
  */
-const getDisplayHeight = () => Math.min(this.display.getWidth(), this.display.getHeight())
+const getDisplayHeight = () => Math.min(display?.getWidth(), display?.getHeight())
 
 EXPORT("getDisplayHeight", getDisplayHeight)
 
@@ -451,7 +396,7 @@ EXPORT("getDisplayPercentHeight", getDisplayPercentHeight)
 /**
  * Dependent constant per pixel size on display.
  */
-const getDisplayDensity = () => this.metrics.density
+const getDisplayDensity = () => metrics?.density
 
 EXPORT("getDisplayDensity", getDisplayDensity)
 
@@ -459,7 +404,7 @@ EXPORT("getDisplayDensity", getDisplayDensity)
  * Relative dependent on pixel size width value.
  * @param x percent of width
  */
-const getRelativeDisplayPercentWidth = (x: number): number => Math.round(getDisplayWidth() / 100 * x / this.metrics.density)
+const getRelativeDisplayPercentWidth = (x: number): number => Math.round(getDisplayWidth() / 100 * x / metrics?.density)
 
 EXPORT("getRelativeDisplayPercentWidth", getRelativeDisplayPercentWidth)
 
@@ -467,7 +412,7 @@ EXPORT("getRelativeDisplayPercentWidth", getRelativeDisplayPercentWidth)
  * Relative dependent on pixel size height value.
  * @param y percent of height
  */
-const getRelativeDisplayPercentHeight = (y: number): number => Math.round(getDisplayHeight() / 100 * y / this.metrics.density)
+const getRelativeDisplayPercentHeight = (y: number): number => Math.round(getDisplayHeight() / 100 * y / metrics?.density)
 
 EXPORT("getRelativeDisplayPercentHeight", getRelativeDisplayPercentHeight)
 
@@ -475,7 +420,7 @@ EXPORT("getRelativeDisplayPercentHeight", getRelativeDisplayPercentHeight)
  * Applies Android TypedValue `COMPLEX_UNIT_DIP`.
  * @param value to change dimension
  */
-const toComplexUnitDip = (value: number): number => android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_DIP, value, this.metrics)
+const toComplexUnitDip = (value: number): number => android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_DIP, value, metrics)
 
 EXPORT("toComplexUnitDip", toComplexUnitDip)
 
@@ -483,7 +428,7 @@ EXPORT("toComplexUnitDip", toComplexUnitDip)
  * Applies Android TypedValue `COMPLEX_UNIT_SP`.
  * @param value to change dimension
  */
-const toComplexUnitSp = (value: number): number => android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_SP, value, this.metrics)
+const toComplexUnitSp = (value: number): number => android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_SP, value, metrics)
 
 EXPORT("toComplexUnitSp", toComplexUnitSp)
 
@@ -512,8 +457,8 @@ EXPORT("toDigestMd5", toDigestMd5)
  * @param milliseconds to vibrate
  */
 const vibrate = (() => {
-	let service = getContext().getSystemService(android.content.Context.VIBRATOR_SERVICE)
-	return (milliseconds: number): void => service.vibrate(milliseconds)
+	let service = getContext()?.getSystemService(android.content.Context.VIBRATOR_SERVICE)
+	return (milliseconds: number): void => service?.vibrate(milliseconds)
 })()
 
 EXPORT("vibrate", vibrate)

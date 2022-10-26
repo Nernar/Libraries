@@ -37,29 +37,31 @@ declare const registerReportAction: (when: (error: any) => void) => void;
  */
 declare const showReportDialog: (message: string, title: string, fallback?: Function) => void;
 /**
- * Directly redirects native rhino JavaScript {@link Error} to
- * {@link java.lang.Throwable} instances.
- */
-declare const resolveThrowable: {
-    invoke(what: Function, when: (th: java.lang.Throwable) => void): any;
-    invokeRuntime(what: Function, when: (th: java.lang.Throwable) => void): any;
-    invokeRhino(what: Function, when: (th: java.lang.Throwable) => void): any;
-};
-/**
- * Delays the action in the interface
- * thread for the required time.
+ * Delays the action in main thread pool
+ * directly for the required time, unhandled
+ * exceptions will cause crash.
  * @param action action
  * @param time expectation
+ * @returns sheduled future when no associated context
  */
-declare const handle: (action: Function, time?: number) => void;
+declare const handleOnThread: (action: () => void, time?: number) => void | java.util.concurrent.ScheduledFuture<any>;
 /**
- * Delays the action in the interface and
+ * Delays the action in main thread pool
+ * safely for the required time.
+ * @param action action
+ * @param time expectation
+ * @see {@link handleOnThread}
+ */
+declare const handle: (action: () => void, time?: number) => void | java.util.concurrent.ScheduledFuture<any>;
+/**
+ * Delays the action in main thread pool and
  * async waiting it in current thread.
  * @param action to be acquired
  * @param fallback default value
  * @returns action result or {@link fallback}
+ * @see {@link handleOnThread}
  */
-declare const acquire: (action: Function, fallback?: any) => any;
+declare const acquire: (action: () => any, fallback?: any) => any;
 /**
  * Interrupts currently stacked threads, it must
  * be implemented in your {@link java.lang.Thread Thread} itself.
@@ -71,7 +73,7 @@ declare const interruptThreads: () => void;
  * @param action action
  * @param priority number between 1-10
  */
-declare const handleThread: (action: Function, priority?: number) => java.lang.Thread;
+declare const handleThread: (action: () => void, priority?: number) => java.lang.Thread;
 /**
  * Generates a random number from minimum to
  * maximum value. If only the first is indicated,
@@ -144,7 +146,7 @@ declare const getDisplayPercentHeight: (y: number) => number;
 /**
  * Dependent constant per pixel size on display.
  */
-declare const getDisplayDensity: () => any;
+declare const getDisplayDensity: () => number;
 /**
  * Relative dependent on pixel size width value.
  * @param x percent of width
