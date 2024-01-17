@@ -3,6 +3,6 @@
         "name": "Zote Echoes",
         "ip": "zote-echoes.mcbe.in",
         "port": 19132,
-        "socket_port": 19131
+        "native_protocol_prioritized": true
     }
 ]
