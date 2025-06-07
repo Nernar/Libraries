@@ -3,19 +3,18 @@
  * check the conditions for subsequent execution.
  * @param {object|number} [obj] merges with prototype or tick time
  */
-Action = (function() {
-	let identifier = 0;
-	return function(obj) {
-		if (typeof obj == "number") {
-			this.setTickTime(obj);
-		} else if (obj !== undefined) {
-			for (let element in obj) {
-				this[element] = obj[element];
-			}
+function Action(obj) {
+	if (typeof obj == "number") {
+		this.setTickTime(obj);
+	} else if (obj !== undefined) {
+		for (let element in obj) {
+			this[element] = obj[element];
 		}
-		this.id = "action" + (identifier++);
-	};
-})();
+	}
+	this.id = "action" + (Action.uid++);
+}
+
+Action.uid = 0;
 
 Action.prototype.getThread = function() {
 	return this.thread !== undefined ? this.thread : null;
@@ -298,13 +297,13 @@ EXPORT("Action", Action);
  * @param {number} [time] tick waiting
  * @returns {Action} special event
  */
-handleAction = function(action, condition, time) {
+function handleAction(action, condition, time) {
 	let custom = new Action();
 	action && custom.setAction(action);
 	condition && custom.setCondition(condition);
 	time >= 0 && custom.setRealAwait(time);
 	custom.create().run();
 	return custom;
-};
+}
 
 EXPORT("handleAction", handleAction);
