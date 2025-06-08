@@ -23,24 +23,25 @@ LIBRARY({
 	shared: true
 });
 
-$ = new JavaImporter();
+let $ = new JavaImporter();
 $.importPackage(org.mozilla.javascript);
 $.importPackage(Packages.com.cedarsoftware.util.io);
 
-JsonIo = {};
+let JsonIo = {};
 JsonIo.Writer = $.JsonWriter;
 JsonIo.Reader = $.JsonReader;
 JsonIo.Object = $.JsonObject;
 
-shouldReturnPrimitive = function(value) {
+function shouldReturnPrimitive(value) {
 	if (value instanceof java.lang.CharSequence) {
 		return "" + value;
 	}
 	if (value instanceof java.lang.Number) {
+		// @ts-expect-error
 		return value - 0;
 	}
 	if (value instanceof java.lang.Boolean) {
 		return !!value;
 	}
 	return $.ScriptRuntime.toObject(this, value);
-};
+}

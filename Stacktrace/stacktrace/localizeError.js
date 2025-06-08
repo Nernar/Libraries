@@ -4,7 +4,7 @@
  * @param {Error|string} error to localize
  * @returns {string} represented stroke
  */
-localizeError = function(error) {
+function localizeError(error) {
 	let message = fetchErrorMessage(error);
 	if (error instanceof java.lang.Object) {
 		MCSystem.throwException("Stacktrace: unsupported localize error type: " + error);
@@ -13,4 +13,4 @@ localizeError = function(error) {
 		error = sliceMessageWithoutTrace(message, retraced);
 	}
 	return translateMessage(error);
-};
+}

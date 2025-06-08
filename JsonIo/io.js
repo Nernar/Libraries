@@ -1,9 +1,9 @@
-jsonIoWriterEnum = 0;
+let jsonIoWriterEnum = 0;
 JsonIo.COMPLETED = jsonIoWriterEnum++;
 JsonIo.UNCLOSED = jsonIoWriterEnum++;
 JsonIo.UNCHANGED = jsonIoWriterEnum++;
 
-getJsonIoWriter = function(stream, args) {
+function getJsonIoWriter(stream, args) {
 	if (stream === null || stream === undefined) {
 		MCSystem.throwException("JsonIo: JsonIo.getWriter stream must be defined");
 	}
@@ -14,9 +14,9 @@ getJsonIoWriter = function(stream, args) {
 		return new JsonIo.Writer(stream, args);
 	}
 	return new JsonIo.Writer(stream);
-};
+}
 
-writeJsonIoToStream = function(stream, json, args) {
+function writeJsonIoToStream(stream, json, args) {
 	if (json === undefined) {
 		log("JsonIo: undefined passed to JsonIo.writeStream, nothing will happened");
 		return JsonIo.UNCHANGED;
@@ -30,19 +30,19 @@ writeJsonIoToStream = function(stream, json, args) {
 	} catch (e) {
 		return JsonIo.UNCLOSED;
 	}
-};
+}
 
-writeScriptableToStream = function(stream, who, args, primitiveArrays) {
+function writeScriptableToStream(stream, who, args, primitiveArrays) {
 	if (!(who instanceof JsonIo.Object)) {
 		who = writeScriptableToJsonIo(who, primitiveArrays);
 	}
 	return writeJsonIoToStream(stream, who, args);
-};
+}
 
 JsonIo.getWriter = getJsonIoWriter;
 JsonIo.writeStream = writeScriptableToStream;
 
-getJsonIoReader = function(streamOrString, args) {
+function getJsonIoReader(streamOrString, args) {
 	if (streamOrString === null || streamOrString === undefined) {
 		return new JsonIo.Reader();
 	}
@@ -56,9 +56,9 @@ getJsonIoReader = function(streamOrString, args) {
 		return new JsonIo.Reader(streamOrString, args);
 	}
 	return new JsonIo.Reader(streamOrString);
-};
+}
 
-readJsonIoFromStream = function(streamOrString, args) {
+function readJsonIoFromStream(streamOrString, args) {
 	let reader = getJsonIoReader(streamOrString, args),
 		json = reader.readObject();
 	try {
@@ -67,12 +67,12 @@ readJsonIoFromStream = function(streamOrString, args) {
 		log("JsonIo: readJsonIoFromStream: " + e);
 	}
 	return json;
-};
+}
 
-readScriptableFromStream = function(streamOrString, args, allowClasses) {
+function readScriptableFromStream(streamOrString, args, allowClasses) {
 	let json = readJsonIoFromStream(streamOrString, args);
 	return readJsonIoToScriptable(json, allowClasses);
-};
+}
 
 JsonIo.getReader = getJsonIoReader;
 JsonIo.readStream = readScriptableFromStream;

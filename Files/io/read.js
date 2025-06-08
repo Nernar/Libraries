@@ -1,6 +1,6 @@
 Files.read = function(file, massive) {
 	if (!file.exists()) return massive ? [] : null;
-	let reader = java.io.BufferedReader(new java.io.FileReader(file)),
+	let reader = new java.io.BufferedReader(new java.io.FileReader(file)),
 		result = [],
 		line;
 	while (line = reader.readLine()) {

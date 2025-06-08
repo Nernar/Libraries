@@ -1,5 +1,6 @@
 Environment.Parser = function(environment, stroke) {
 	this.environment = environment;
+	this.buffer = null;
 	if (typeof stroke == "string") {
 		this.parse(stroke);
 	} else {
@@ -96,13 +97,13 @@ Environment.Parser.Runtime.prototype.test = function() {
 	return this.run() == true;
 };
 
-parseInRuntime = function(environment, stroke) {
+function parseInRuntime(environment, stroke) {
 	return new Environment.Parser(environment, stroke).format();
-};
+}
 
-instanceOrFormat = function(value) {
+function instanceOrFormat(value) {
 	if (value instanceof Environment.Parser) {
 		return value.format();
 	}
 	return value;
-};
+}

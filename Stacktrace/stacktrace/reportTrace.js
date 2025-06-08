@@ -3,9 +3,9 @@
  * may used in [[catch]]-block when any throw
  * code occurs. Stacktrace will be displayed
  * on display with sources hieracly.
- * @param {Error|any} value to report
+ * @param {Error|any} error value to report
  */
-reportTrace = function(error) {
+function reportTrace(error) {
 	if (error === undefined) {
 		return;
 	}
@@ -37,7 +37,7 @@ reportTrace = function(error) {
 		let code = reportTrace.toCode(error);
 		builder.setNegativeButton(code, function() {
 			posted.export = true;
-			new java.lang.Thread(function() {
+			java.lang.Thread(function() {
 				while (posted.inProcess()) {
 					java.lang.Thread.yield();
 				}
@@ -58,13 +58,14 @@ reportTrace = function(error) {
 		let posted = reportTrace.postUpdate(dialog, error, date);
 		dialog.show();
 		let view = popup.findViewById(android.R.id.message);
-		if (view != null) {
+		if (view != null && view instanceof android.widget.TextView) {
 			view.setTextIsSelectable(true);
 			view.setTextSize(view.getTextSize() * 0.475);
 		}
 	});
-};
+}
 
+reportTrace.isReporting = false;
 reportTrace.handled = [];
 
 reportTrace.postUpdate = function(dialog, error, date) {
@@ -76,13 +77,13 @@ reportTrace.postUpdate = function(dialog, error, date) {
 		completed = false,
 		formatted,
 		update;
-	new java.lang.Thread(function() {
+	java.lang.Thread(function() {
 		let message = fetchErrorMessage(error),
 			retraced = retraceToArray(error ? error.stack : null);
 		retraced.length > 0 && retraced.pop();
 		let sliced = sliceMessageWithoutTrace(message, retraced[0]),
 			localized = translateMessage(sliced);
-		update = new java.lang.Runnable(function() {
+		update = java.lang.Runnable(function() {
 			let additional = [];
 			if (message != null) {
 				let entry = "<font color=\"#CCCC33\">";
@@ -143,7 +144,7 @@ reportTrace.postUpdate = function(dialog, error, date) {
 };
 
 reportTrace.processFile = function(file, where) {
-	if (typeof where != "number" || where === NaN) {
+	if (typeof where != "number" || isNaN(where)) {
 		return null;
 	}
 	let strokes = [];
@@ -151,7 +152,7 @@ reportTrace.processFile = function(file, where) {
 		return strokes;
 	}
 	let scanner = new java.io.FileReader(file),
-		reader = java.io.BufferedReader(scanner),
+		reader = new java.io.BufferedReader(scanner),
 		wasErrorLines = false,
 		encounted = 0,
 		hieracly = 0,
@@ -198,7 +199,7 @@ reportTrace.processFile = function(file, where) {
 };
 
 reportTrace.processSources = function(related, resolved, where) {
-	if (typeof where != "number" || where === NaN) {
+	if (typeof where != "number" || isNaN(where)) {
 		return null;
 	}
 	let strokes = [];
@@ -243,7 +244,7 @@ reportTrace.processStack = function(resolved) {
 reportTrace.handleRequest = function(handler, update, trace) {
 	let requested = {};
 	requested.formatted = [];
-	new java.lang.Thread(function() {
+	java.lang.Thread(function() {
 		try {
 			for (let i = 0; i < trace.length; i++) {
 				let resolved = resolveTraceSource(trace[i]);
@@ -257,7 +258,7 @@ reportTrace.handleRequest = function(handler, update, trace) {
 			try {
 				handler.post(update);
 			} catch (e) {
-				print(e.message);
+				showToast(e.message);
 			}
 		}
 		requested.completed = true;
@@ -295,9 +296,10 @@ reportTrace.toCode = function(error) {
 
 reportTrace.setupPrint = function(action) {
 	if (typeof action != "function") {
-		return delete print;
+		showToast = print;
+		return true;
 	}
-	return !!(print = action);
+	return !!(showToast = action);
 };
 
 reportTrace.reloadModifications = function() {

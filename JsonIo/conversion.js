@@ -1,4 +1,4 @@
-writeNativeObjectToJsonIo = function(object, primitiveArrays) {
+function writeNativeObjectToJsonIo(object, primitiveArrays) {
 	if (object === null || object === undefined) {
 		MCSystem.throwException("JsonIo: Passed to writeNativeObject value must be defined");
 	}
@@ -8,9 +8,9 @@ writeNativeObjectToJsonIo = function(object, primitiveArrays) {
 		someone !== undefined && json.put(element, someone);
 	}
 	return json;
-};
+}
 
-writeNativeArrayToJsonIo = function(array, primitiveArrays) {
+function writeNativeArrayToJsonIo(array, primitiveArrays) {
 	if (array === null || array === undefined) {
 		MCSystem.throwException("JsonIo: Passed to writeNativeArray value must be defined");
 	}
@@ -21,13 +21,14 @@ writeNativeArrayToJsonIo = function(array, primitiveArrays) {
 	}
 	let json = new JsonIo.Object();
 	if (primitiveArrays !== false) {
+		// @ts-expect-error
 		output = output.toArray();
 	}
 	json.put("@items", output);
 	return json;
-};
+}
 
-writeScriptableToJsonIo = function(who, primitiveArrays) {
+function writeScriptableToJsonIo(who, primitiveArrays) {
 	try {
 		if (who === null) {
 			return null;
@@ -66,11 +67,11 @@ writeScriptableToJsonIo = function(who, primitiveArrays) {
 		return null;
 	}
 	MCSystem.throwException("JsonIo: Unknown type " + typeof who + " of " + who);
-};
+}
 
 JsonIo.toJson = writeScriptableToJsonIo;
 
-readJsonIoToNativeObject = function(json, allowClasses) {
+function readJsonIoToNativeObject(json, allowClasses) {
 	if (!(json instanceof java.util.Map)) {
 		MCSystem.throwException("JsonIo: Passed to readNativeObject value must be java.util.Map");
 	}
@@ -82,28 +83,31 @@ readJsonIoToNativeObject = function(json, allowClasses) {
 		someone !== undefined && (object[key] = someone);
 	}
 	return object;
-};
+}
 
-readJsonIoToNativeArray = function(json, allowClasses) {
+function readJsonIoToNativeArray(json, allowClasses) {
 	if (json === null || json === undefined) {
 		MCSystem.throwException("JsonIo: Passed to readNativeArray value must be defined");
 	}
 	let array = [];
-	if (json instanceof java.util.List || json instanceof java.util.Collection) {
+	if (json instanceof java.util.List) {
 		for (let i = 0; i < json.size(); i++) {
 			let someone = readJsonIoToScriptable(json.get(i), allowClasses);
 			someone !== undefined && array.push(someone);
 		}
 	} else {
+		if (json instanceof java.util.Collection) {
+			json = json.toArray();
+		}
 		for (let i = 0; i < json.length; i++) {
 			let someone = readJsonIoToScriptable(json[i], allowClasses);
 			someone !== undefined && array.push(someone);
 		}
 	}
 	return array;
-};
+}
 
-readJsonIoToScriptable = function(json, allowClasses) {
+function readJsonIoToScriptable(json, allowClasses) {
 	if (!(json instanceof JsonIo.Object)) {
 		try {
 			if (json == null) {
@@ -139,6 +143,6 @@ readJsonIoToScriptable = function(json, allowClasses) {
 		return shouldReturnPrimitive(value);
 	}
 	return readJsonIoToNativeObject(json, allowClasses);
-};
+}
 
 JsonIo.fromJson = readJsonIoToScriptable;

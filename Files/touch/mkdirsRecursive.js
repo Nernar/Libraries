@@ -9,4 +9,5 @@ Files.mkdirsRecursive = function(path, output, explore) {
 			count++;
 		}
 	}
+	return count;
 };

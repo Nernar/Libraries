@@ -23,17 +23,16 @@ LIBRARY({
 	shared: true
 });
 
-toDigestMd5 = (function(){
-	let digest = java.security.MessageDigest.getInstance("md5");
-	return function(bytes) {
-		digest.update(bytes);
-		let byted = digest.digest()
-		let sb = new java.lang.StringBuilder();
-		for (let i = 0; i < byted.length; i++) {
-			sb.append(java.lang.Integer.toHexString(0xFF & byted[i]));
-		}
-		return sb.toString();
-	};
-})();
+let digestMd5 = java.security.MessageDigest.getInstance("md5");
 
-Files = {};
+function toDigestMd5(bytes) {
+	digestMd5.update(bytes);
+	let byted = digestMd5.digest()
+	let sb = new java.lang.StringBuilder();
+	for (let i = 0; i < byted.length; i++) {
+		sb.append(java.lang.Integer.toHexString(0xFF & byted[i]));
+	}
+	return sb.toString();
+}
+
+let Files = {};

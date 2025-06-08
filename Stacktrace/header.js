@@ -23,16 +23,17 @@ LIBRARY({
 	shared: true
 });
 
-launchTime = Date.now();
-isHorizon = (function() {
+let launchTime = Date.now();
+let isHorizon = (function() {
 	let version = MCSystem.getInnerCoreVersion();
 	return parseInt(version.toString()[0]) >= 2;
 })();
-InnerCorePackages = isHorizon ? Packages.com.zhekasmirnov.innercore : Packages.zhekasmirnov.launcher;
+let InnerCorePackages = isHorizon ? Packages.com.zhekasmirnov.innercore : Packages.zhekasmirnov.launcher;
+let showToast = print;
 
-isValidFile = function(file) {
+function isValidFile(file) {
 	if (file instanceof java.io.File) {
 		return file.isFile();
 	}
 	return false;
-};
+}

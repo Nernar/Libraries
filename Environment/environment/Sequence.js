@@ -2,7 +2,7 @@ Environment.Sequence = function(task, json) {
 	this.task = task;
 	if (Array.isArray(json)) {
 		this.sequence = json;
-	} else if (sequence !== undefined) {
+	} else if (json !== undefined) {
 		this.sequence = [];
 		this.sequence.push(json);
 	}

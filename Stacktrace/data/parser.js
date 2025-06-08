@@ -1,4 +1,4 @@
-reformatSpecial = function(element) {
+function reformatSpecial(element) {
 	element = "" + element;
 	element = element.replace(/\+/g, "\\+");
 	element = element.replace(/\(/g, "\\(");
@@ -8,9 +8,9 @@ reformatSpecial = function(element) {
 	element = element.replace(/\{/g, "\\{");
 	element = element.replace(/\}/g, "\\}");
 	return element.replace(/\./g, "\\.");
-};
+}
 
-requireFormat = function(message) {
+function requireFormat(message) {
 	for (let element in addTranslation.messages) {
 		let exp = reformatSpecial(element);
 		exp = exp.replace(/%s/g, "(.*)");
@@ -29,9 +29,9 @@ requireFormat = function(message) {
 	return {
 		message: message
 	};
-};
+}
 
-translateMessage = function(message) {
+function translateMessage(message) {
 	if (typeof message != "string") {
 		message = "" + message;
 	}
@@ -50,9 +50,9 @@ translateMessage = function(message) {
 		}
 	}
 	return message;
-};
+}
 
-resolveTraceSource = function(line) {
+function resolveTraceSource(line) {
 	if (typeof line != "string") {
 		line = "" + line;
 	}
@@ -80,9 +80,9 @@ resolveTraceSource = function(line) {
 	}
 	resolved.file = line;
 	return resolved;
-};
+}
 
-sliceMessageWithoutTrace = function(message, line) {
+function sliceMessageWithoutTrace(message, line) {
 	if (typeof message != "string") {
 		message = "" + message;
 	}
@@ -96,9 +96,9 @@ sliceMessageWithoutTrace = function(message, line) {
 		return message.slice(0, index - 2);
 	}
 	return message;
-};
+}
 
-retraceToArray = function(trace) {
+function retraceToArray(trace) {
 	if (trace === null || trace === undefined) {
 		return [];
 	}
@@ -106,9 +106,9 @@ retraceToArray = function(trace) {
 		trace = "" + trace;
 	}
 	return trace.split("\n");
-};
+}
 
-fetchErrorMessage = function(error) {
+function fetchErrorMessage(error) {
 	if (error === null) {
 		return "" + error;
 	}
@@ -119,18 +119,18 @@ fetchErrorMessage = function(error) {
 		return null;
 	}
 	return "" + error;
-};
+}
 
-fetchErrorName = function(error) {
+function fetchErrorName(error) {
 	if (error && typeof error == "object") {
 		if (error.name !== undefined) {
 			return "" + error.name;
 		}
 	}
 	return Translation.translate("Oh nose everything broke");
-};
+}
 
-saveOrRewrite = function(path, text) {
+function saveOrRewrite(path, text) {
 	text = new java.lang.String(text);
 	let file = new java.io.File(__dir__ + ".logging", path + ".trace");
 	file.getParentFile().mkdirs();
@@ -139,8 +139,8 @@ saveOrRewrite = function(path, text) {
 		let stream = new java.io.FileOutputStream(file);
 		stream.write(text.getBytes());
 		stream.close();
-		print(Translation.translate("Saved as") + " " + path);
+		showToast(Translation.translate("Saved as") + " " + path);
 		return;
 	}
-	print(Translation.translate("Couldn't save trace"));
-};
+	showToast(Translation.translate("Couldn't save trace"));
+}

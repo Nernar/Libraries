@@ -1,11 +1,11 @@
-addTranslation = function(prefix, who, translation) {
+function addTranslation(prefix, who, translation) {
 	if (!addTranslation.messages.hasOwnProperty(who)) {
 		Object.defineProperty(addTranslation.messages, who, {
 			enumerable: true
 		});
 	}
 	InnerCorePackages.api.runtime.other.NameTranslation.addSingleTranslation(prefix, who, translation);
-};
+}
 
 addTranslation.messages = {};
 

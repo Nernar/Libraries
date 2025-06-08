@@ -1,0 +1,16 @@
+declare function shouldReturnPrimitive(value: any): any;
+declare let $: JavaImporter;
+declare let JsonIo: typeof JsonIo;
+declare function writeNativeObjectToJsonIo(object: any, primitiveArrays: any): any;
+declare function writeNativeArrayToJsonIo(array: any, primitiveArrays: any): any;
+declare function writeScriptableToJsonIo(who: any, primitiveArrays: any): any;
+declare function readJsonIoToNativeObject(json: any, allowClasses: any): {};
+declare function readJsonIoToNativeArray(json: any, allowClasses: any): any;
+declare function readJsonIoToScriptable(json: any, allowClasses: any): any;
+declare function getJsonIoWriter(stream: any, args: any): any;
+declare function writeJsonIoToStream(stream: any, json: any, args: any): number;
+declare function writeScriptableToStream(stream: any, who: any, args: any, primitiveArrays: any): number;
+declare function getJsonIoReader(streamOrString: any, args: any): any;
+declare function readJsonIoFromStream(streamOrString: any, args: any): any;
+declare function readScriptableFromStream(streamOrString: any, args: any, allowClasses: any): any;
+declare let jsonIoWriterEnum: number;

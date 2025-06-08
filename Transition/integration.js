@@ -4,19 +4,19 @@
  * @param {Object} params frames array
  * @param {number} params entity
  */
-Transition = (function() {
-	let identifier = 0;
-	return function(params) {
-		if (params) {
-			if (typeof params == "object") {
-				this.withFrames(params);
-			} else if (typeof params == "number") {
-				this.withEntity(params);
-			} else MCSystem.throwException("Transition: Transition(object | number) allowed constructor");
-		}
-		this.id = "transition" + (identifier++);
-	};
-})();
+function Transition(params) {
+	if (params) {
+		if (typeof params == "object") {
+			this.withFrames(params);
+		} else if (typeof params == "number") {
+			this.withEntity(params);
+		} else MCSystem.throwException("Transition: Transition(object | number) allowed constructor");
+	}
+	this.id = "transition" + (Transition.uid++);
+}
+
+Transition.uid = 0;
+Transition.currently = null;
 
 Transition.prototype.frames = [];
 Transition.prototype.fps = 60;
@@ -55,7 +55,7 @@ Transition.prototype.getRelativePoint = function() {
 	return {
 		x: this.point[0] - this.starting[0],
 		y: this.point[1] - this.starting[1],
-		x: this.point[2] - this.starting[2],
+		z: this.point[2] - this.starting[2],
 		yaw: this.point[3] - this.starting[3],
 		pitch: this.point[4] - this.starting[4]
 	};

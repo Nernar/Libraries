@@ -5,8 +5,8 @@ Files.appendRecursive = function(path, output, explore, includeDirectories) {
 		count += this.mkdirsRecursive(path, output, explore);
 	}
 	for (let i = 0; i < files.length; i++) {
-		let source = this.shrinkPathes(path, files[i]);
-		file = new java.io.File(output, source);
+		let source = this.shrinkPathes(path, files[i]),
+			file = new java.io.File(output, source);
 		this.append(files[i], file.getPath());
 		count++;
 	}

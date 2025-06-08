@@ -26,4 +26,4 @@ LIBRARY({
 
 IMPORT("Connectivity:1");
 
-ModBrowser = {};
+let ModBrowser = {};

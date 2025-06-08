@@ -6,17 +6,22 @@
  * by [[next()]] besides [[execute()]] passed value.
  * @param {object} [obj] merges with prototype
  */
-Sequence = (function() {
-	let identifier = 0;
-	return function(obj) {
-		if (obj !== undefined) {
-			for (let element in obj) {
-				this[element] = obj[element];
-			}
+function Sequence(obj) {
+	this.update = null;
+	this.tick = null;
+	this.complete = null;
+	this.uncount = null;
+	this.create = null;
+	this.completed = null;
+	if (obj !== undefined) {
+		for (let element in obj) {
+			this[element] = obj[element];
 		}
-		this.id = "sequence" + (identifier++);
-	};
-})();
+	}
+	this.id = "sequence" + (Sequence.uid++);
+}
+
+Sequence.uid = 0;
 
 Sequence.prototype.getThread = function() {
 	return this.thread !== undefined ? this.thread : null;
@@ -64,8 +69,8 @@ Sequence.prototype.isReportingEnabled = function() {
 Sequence.prototype.sync = function(active) {
 	let sequence = this;
 	handle(function() {
-		if (sequence.completed === undefined) {
-			if (sequence.updated === true) {
+		if (sequence.completed == null) {
+			if (sequence.updated) {
 				sequence.update && sequence.update.call(sequence, sequence.count === undefined ?
 					sequence.index : sequence.index / sequence.count * 100, sequence.index);
 				delete sequence.updated;
@@ -74,7 +79,7 @@ Sequence.prototype.sync = function(active) {
 			sequence.sync && sequence.sync(active);
 			return;
 		}
-		if (sequence.completed === true) {
+		if (sequence.completed) {
 			sequence.complete && sequence.complete.call(sequence, Date.now() - active, active);
 		}
 		delete sequence.completed;
@@ -98,7 +103,7 @@ Sequence.prototype.execute = function(value) {
 		sequence.create && sequence.create.call(sequence, value, active);
 		sequence.thread = handleThread(function() {
 			try {
-				if (sequence.uncount !== undefined) {
+				if (sequence.uncount != null) {
 					sequence.count = sequence.uncount.call(sequence, value);
 					sequence.require();
 				}
@@ -115,7 +120,7 @@ Sequence.prototype.execute = function(value) {
 				});
 			}
 			delete sequence.thread;
-			if (sequence.uncount !== undefined) {
+			if (sequence.uncount != null) {
 				delete sequence.count;
 			}
 			delete sequence.updated;
@@ -158,7 +163,7 @@ Sequence.prototype.shrink = function(addition) {
  * value will be used into it. That action created
  * to communicate executing object with process,
  * split it to processable parts.
- * @param {any} [value] passed on execute
+ * @param {any} value passed on execute
  * @param {number} index was returned by [[process()]]
  * @returns {any} value or element to [[process()]]
  */
@@ -173,8 +178,8 @@ Sequence.prototype.next = function(value, index) {
  * @async Wouldn't access interface thread.
  * Main sequence process in thread;
  * handles object and returns index.
- * @param {any} [element] next result to handle
- * @param {any} [value] elements resolver
+ * @param {any} element next result to handle
+ * @param {any} value elements resolver
  * @param {number} index indicates progress
  * @returns {number} index to sync
  * @throws must be overwritten in usage

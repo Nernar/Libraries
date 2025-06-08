@@ -1,9 +1,15 @@
 Environment.Task = function(environment, json) {
 	this.environment = environment;
+	this.sequence = null;
+	this.instance = null;
+	this.condition = null;
+	this.SUBTASK = null;
 	if (json !== undefined) {
 		this.parseJson(json);
 	}
 };
+
+Environment.Task.registered = {};
 
 Environment.Task.prototype.getEnvironment = function() {
 	return this.environment || null;
@@ -71,9 +77,6 @@ Environment.Task.prototype.parseJson = function(json) {
 };
 
 Environment.Task.registerTask = function(name, task) {
-	if (this.registered === undefined) {
-		this.registered = {};
-	}
 	if (this.registered.hasOwnProperty(name)) {
 		log("Environment: Redefines environment task " + name);
 	}

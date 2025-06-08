@@ -1,4 +1,4 @@
-Environment = function(pathOrJson, json) {
+function Environment(pathOrJson, json) {
 	if (pathOrJson instanceof java.io.File) {
 		this.path = pathOrJson.getParentFile().getPath();
 		if (json == null || typeof json != "object") {
@@ -15,7 +15,7 @@ Environment = function(pathOrJson, json) {
 			this.path = pathOrJson;
 		}
 	}
-};
+}
 
 Environment.prototype.getTask = function() {
 	return this.task || null;

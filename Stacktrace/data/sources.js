@@ -1,4 +1,4 @@
-getLoadedModList = function() {
+function getLoadedModList() {
 	try {
 		let mods = Packages.com.zhekasmirnov.apparatus.modloader.ApparatusModLoader.getSingleton().getAllMods();
 		let sorted = new java.util.ArrayList();
@@ -12,9 +12,9 @@ getLoadedModList = function() {
 	} catch (e) {
 		return InnerCorePackages.mod.build.ModLoader.instance.modsList;
 	}
-};
+}
 
-fetchScriptSources = function(mod) {
+function fetchScriptSources(mod) {
 	let founded = {};
 	let buildConfig = mod.buildConfig;
 	let sources = buildConfig.sourcesToCompile;
@@ -34,20 +34,20 @@ fetchScriptSources = function(mod) {
 		}
 	}
 	return founded;
-};
+}
 
-setupLoadedSources = function(mods) {
+function setupLoadedSources(mods) {
 	for (let i = 0; i < mods.size(); i++) {
 		let source = mods.get(i);
 		setupLoadedSources.mods[source] = fetchScriptSources(source);
 		setupLoadedSources.sources[source] = source;
 	}
-};
+}
 
 setupLoadedSources.mods = {};
 setupLoadedSources.sources = {};
 
-getModName = function(id) {
+function getModName(id) {
 	if (setupLoadedSources.sources.hasOwnProperty(id)) {
 		let source = setupLoadedSources.sources[id];
 		if (source) {
@@ -55,9 +55,9 @@ getModName = function(id) {
 		}
 	}
 	return "";
-};
+}
 
-findAvailabledMods = function(name) {
+function findAvailabledMods(name) {
 	let array = [];
 	for (let element in setupLoadedSources.mods) {
 		let mod = getModName(element);
@@ -74,9 +74,9 @@ findAvailabledMods = function(name) {
 		}
 	}
 	return array;
-};
+}
 
-findRelatedSources = function(name, file) {
+function findRelatedSources(name, file) {
 	let sources = findAvailabledMods(name);
 	if (sources.length == 0) {
 		return {};
@@ -101,4 +101,4 @@ findRelatedSources = function(name, file) {
 		}
 	}
 	return related;
-};
+}
