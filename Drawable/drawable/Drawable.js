@@ -1,4 +1,5 @@
-Drawable = new Function();
+function Drawable() {
+}
 
 Drawable.prototype.isAttachedAsImage = function(view) {
 	if (!view) return HashedDrawableMap.getAsImageAttachedViews(this).length > 0;

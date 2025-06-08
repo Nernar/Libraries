@@ -1,10 +1,10 @@
-AnimationDrawable = function(frames) {
+function AnimationDrawable(frames) {
 	this.clearFrames();
 	if (frames !== undefined) {
 		this.addFrames(frames);
 	}
 	ScheduledDrawable.call(this);
-};
+}
 
 AnimationDrawable.prototype = new ScheduledDrawable;
 

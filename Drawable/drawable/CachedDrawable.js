@@ -1,9 +1,9 @@
-CachedDrawable = function() {
+function CachedDrawable() {
 	Drawable.call(this);
 	if (this.cacheWhenCreate) {
 		this.toDrawable();
 	}
-};
+}
 
 CachedDrawable.prototype = new Drawable;
 

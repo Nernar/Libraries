@@ -1,6 +1,6 @@
-ScheduledDrawable = function() {
+function ScheduledDrawable() {
 	CachedDrawable.call(this);
-};
+}
 
 ScheduledDrawable.prototype = new CachedDrawable;
 

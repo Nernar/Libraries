@@ -1,4 +1,4 @@
-BitmapDrawable = function(bitmap, options) {
+function BitmapDrawable(bitmap, options) {
 	if (options !== undefined) {
 		this.setOptions(options);
 	}
@@ -6,7 +6,7 @@ BitmapDrawable = function(bitmap, options) {
 		this.setBitmap(bitmap);
 	}
 	ScheduledDrawable.call(this);
-};
+}
 
 BitmapDrawable.prototype = new ScheduledDrawable;
 

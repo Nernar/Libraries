@@ -1,9 +1,9 @@
-ColorDrawable = function(color) {
+function ColorDrawable(color) {
 	if (color !== undefined) {
 		this.setColor(color);
 	}
 	Drawable.call(this);
-};
+}
 
 ColorDrawable.prototype = new Drawable;
 

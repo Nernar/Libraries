@@ -1,4 +1,4 @@
-ClipDrawable = function(drawable, location, side) {
+function ClipDrawable(drawable, location, side) {
 	if (drawable !== undefined) {
 		this.setDrawable(drawable);
 	}
@@ -9,7 +9,7 @@ ClipDrawable = function(drawable, location, side) {
 		this.setSide(side);
 	}
 	ScheduledDrawable.call(this);
-};
+}
 
 ClipDrawable.prototype = new ScheduledDrawable;
 

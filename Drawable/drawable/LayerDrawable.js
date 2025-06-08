@@ -1,10 +1,10 @@
-LayerDrawable = function(layers) {
+function LayerDrawable(layers) {
 	this.clearLayers();
 	if (layers !== undefined) {
 		this.addLayers(layers);
 	}
 	ScheduledDrawable.call(this);
-};
+}
 
 LayerDrawable.prototype = new ScheduledDrawable;
 
