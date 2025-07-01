@@ -4,9 +4,9 @@
  * context, that was used to indicate process.
  * Calls [[process()]] for every element requested
  * by [[next()]] besides [[execute()]] passed value.
- * @param {object} [obj] merges with prototype
+ * @param {any} [obj] merges with prototype
  */
-declare function Sequence(obj?: object): void;
+declare function Sequence(obj?: any): void;
 declare class Sequence {
     /**
      * @constructor
@@ -14,9 +14,9 @@ declare class Sequence {
      * context, that was used to indicate process.
      * Calls [[process()]] for every element requested
      * by [[next()]] besides [[execute()]] passed value.
-     * @param {object} [obj] merges with prototype
+     * @param {any} [obj] merges with prototype
      */
-    constructor(obj?: object);
+    constructor(obj?: any);
     update: any;
     tick: any;
     complete: any;
